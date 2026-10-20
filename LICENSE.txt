@@ -1,0 +1,16 @@
+Copyright (c) 2026 keppicake. All rights reserved.
+
+I Am A Bacteria, including its code, artwork, music, sound effects,
+text and clues, is the original work of keppicake.
+
+This repository is public so that the game can be hosted and played.
+Anyone is welcome to play it at https://keppicake.github.io/I-am-a-bacteria/
+
+No licence is granted to copy, modify, distribute, republish, sell, or
+create derivative works from any part of this project, in whole or in
+part, without prior written permission from keppicake. Viewing and
+forking this repository on GitHub are allowed only to the extent that
+GitHub's Terms of Service require.
+
+To ask for permission, contact keppicake on GitHub:
+https://github.com/keppicake

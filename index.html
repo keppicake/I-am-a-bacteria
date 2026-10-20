@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- I Am A Bacteria · © 2026 keppicake. All rights reserved. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -38,6 +39,9 @@ body{position:relative}
 .cta{position:absolute;left:0;right:0;bottom:calc(9vh + env(safe-area-inset-bottom,0px));text-align:center;font-family:var(--pix);font-size:clamp(.65rem,1.5vw,1rem);letter-spacing:.12em;opacity:0;transition:opacity 1s ease}
 .cta.show{opacity:1}
 .cta span{animation:blink 1.2s steps(1,end) infinite}
+.copy{position:absolute;left:0;right:0;bottom:calc(2.6vh + env(safe-area-inset-bottom,0px));margin:0;text-align:center;font:400 clamp(.42rem,.8vw,.55rem)/1.6 var(--pix);letter-spacing:.08em;color:#fff;opacity:0;transition:opacity 1s ease;pointer-events:none}
+.cta.show~.copy{opacity:.45}
+.hcopy{text-align:center;font:400 clamp(.42rem,.8vw,.55rem)/1.6 var(--pix);letter-spacing:.08em;color:#fff;opacity:.45;margin:clamp(24px,4vh,40px) 0 0}
 @keyframes blink{50%{opacity:.15}}
 
 /* builder */
@@ -323,6 +327,7 @@ body{position:relative}
 <section id="intro" class="screen" aria-label="Title">
   <h1 class="title">I am a bacteria</h1>
   <div class="cta"><span>click to continue</span></div>
+  <p class="copy">© 2026 keppicake. All rights reserved.</p>
 </section>
 
 <section id="help" class="screen off" aria-label="How to play">
@@ -348,6 +353,7 @@ body{position:relative}
       </dl>
     </div>
     <div class="hgo"><button class="btn y lg" id="hgo" type="button">Let's go ▶</button></div>
+    <p class="hcopy">© 2026 keppicake. All rights reserved.</p>
   </div>
 </section>
 
