@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>I Am A Bacteria</title>
+<meta name="description" content="A retro microbiology guessing game. Fill a Petri dish, then identify each bacterium, virus, fungus and parasite from its own clues.">
+<meta name="theme-color" content="#000000">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="I Am A Bacteria">
+<meta property="og:type" content="website">
+<meta property="og:title" content="I Am A Bacteria">
+<meta property="og:description" content="A retro microbiology guessing game. Fill a Petri dish, then identify each bacterium, virus, fungus and parasite from its own clues.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+:root{--red:#E8222A;--blue:#1B4DFF;--yellow:#FFD400;--cream:#FFF3D1;--fat:'Bungee','Impact',sans-serif;--pix:'Press Start 2P','Courier New',monospace;--body:'Trebuchet MS',Verdana,sans-serif;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+html,body{margin:0;height:100%;background:#000;color:#fff;overflow:hidden}
+body{position:relative}
+[hidden]{display:none!important}
+#stars{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:block}
+.screen{position:absolute;inset:0;z-index:1;display:flex;transition:opacity .7s ease,visibility .7s}
+.screen.off{opacity:0;visibility:hidden;pointer-events:none}
+
+/* intro */
+#intro{align-items:center;justify-content:center}
+#intro.ready{cursor:pointer}
+.title,.gtitle{font-family:var(--fat);font-style:italic;font-weight:400;line-height:1;margin:0;text-align:center;letter-spacing:.02em;text-shadow:.04em .04em 0 var(--red),.08em .08em 0 var(--yellow),.12em .12em 0 var(--blue)}
+.title{font-size:clamp(2.4rem,9.5vw,8rem);padding:0 4vw;opacity:0;transform:translateY(14px);animation:rise 1.4s .3s ease forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+.cta{position:absolute;left:0;right:0;bottom:calc(9vh + env(safe-area-inset-bottom,0px));text-align:center;font-family:var(--pix);font-size:clamp(.65rem,1.5vw,1rem);letter-spacing:.12em;opacity:0;transition:opacity 1s ease}
+.cta.show{opacity:1}
+.cta span{animation:blink 1.2s steps(1,end) infinite}
+@keyframes blink{50%{opacity:.15}}
+
+/* builder */
+#build{flex-direction:column;overflow-y:auto;padding:clamp(64px,6vw,72px) clamp(18px,4vw,56px) 150px}
+.wrap{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:clamp(24px,4.5vw,72px);align-items:center;flex:1;width:100%;max-width:1400px;margin:0 auto}
+.q{font-family:var(--fat);font-weight:400;font-size:clamp(1.8rem,4.2vw,3.5rem);line-height:1.08;margin:0 0 .35em;text-shadow:.05em .05em 0 var(--red),.1em .1em 0 var(--blue)}
+.q em{font-style:normal;color:var(--yellow);text-shadow:.05em .05em 0 var(--red),.1em .1em 0 var(--blue)}
+.sub{font-family:var(--pix);font-size:clamp(.55rem,1.05vw,.72rem);line-height:2;color:var(--yellow);margin:0 0 clamp(22px,3.2vw,38px);max-width:34em}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(18px,2.6vw,32px)}
+.card{position:relative;appearance:none;border:5px solid #fff;border-radius:20px;padding:14px 10px 16px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;font-family:var(--fat);font-size:clamp(1.1rem,2.1vw,1.7rem);color:var(--fg);text-shadow:var(--ts);background:var(--bg);box-shadow:8px 8px 0 var(--sh);transition:transform .12s,box-shadow .12s;-webkit-tap-highlight-color:transparent}
+.card svg{width:clamp(78px,11vw,130px);height:auto;overflow:visible}
+.card:hover{transform:translate(-3px,-3px);box-shadow:11px 11px 0 var(--sh)}
+.card:hover svg{animation:wig .5s ease-in-out infinite}
+.card:active{transform:translate(6px,6px);box-shadow:2px 2px 0 var(--sh)}
+.card:focus-visible,.inoc:focus-visible,.mini:focus-visible,.btn:focus-visible{outline:4px dashed #fff;outline-offset:5px}
+@keyframes wig{50%{transform:rotate(-7deg) scale(1.08)}}
+.n{position:absolute;top:-16px;right:-16px;min-width:40px;height:40px;padding:0 6px;border-radius:50%;background:#fff;color:#000;border:4px solid #000;font:400 .9rem var(--pix);text-shadow:none;display:grid;place-items:center;transform:scale(0);transition:transform .25s cubic-bezier(.3,1.8,.5,1)}
+.n.on{transform:scale(1)}
+#build.in .card{animation:cardIn .55s backwards cubic-bezier(.3,1.5,.5,1)}
+#build.in .cwrap:nth-child(1) .card{animation-delay:.15s}#build.in .cwrap:nth-child(2) .card{animation-delay:.27s}#build.in .cwrap:nth-child(3) .card{animation-delay:.39s}#build.in .cwrap:nth-child(4) .card{animation-delay:.51s}
+.cwrap{position:relative;display:flex}
+.cwrap .card{flex:1}
+.minus{position:absolute;top:-16px;left:-16px;z-index:2;width:40px;height:40px;padding:0;border-radius:50%;background:#000;color:#fff;border:4px solid #fff;font:400 1.2rem/1 var(--pix);display:grid;place-items:center;cursor:pointer;transform:scale(0);transition:transform .25s cubic-bezier(.3,1.8,.5,1),background .15s,color .15s;-webkit-tap-highlight-color:transparent}
+.minus.on{transform:scale(1)}
+.minus:hover{background:#fff;color:#000}
+.minus:active{transform:scale(.88)}
+.minus:focus-visible{outline:4px dashed #fff;outline-offset:4px}
+#layer>g.out .g1{animation:popout .25s ease-in forwards}
+@keyframes popout{to{transform:scale(0) rotate(40deg)}}
+@keyframes cardIn{from{opacity:0;transform:translateY(40px) scale(.7) rotate(-6deg)}}
+
+.dishcol{display:flex;flex-direction:column;align-items:center;gap:18px}
+#dish{width:min(100%,62vh,560px);height:auto;overflow:visible}
+#dish.shake{animation:shake .4s}
+#dish.wob{animation:wob .55s 3}
+@keyframes shake{20%{transform:translateX(-10px)}40%{transform:translateX(10px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+@keyframes wob{25%{transform:rotate(-3deg) scale(1.03)}75%{transform:rotate(3deg) scale(1.03)}}
+.g1,.g2{transform-box:fill-box;transform-origin:center}
+.g1{animation:pop .6s cubic-bezier(.3,1.4,.5,1) both}
+.g2{animation:bob var(--dur) ease-in-out var(--dl) infinite}
+@keyframes pop{0%{transform:scale(0) rotate(-50deg)}60%{transform:scale(1.4) rotate(8deg)}100%{transform:scale(1) rotate(0)}}
+@keyframes bob{50%{transform:translate(var(--dx),var(--dy)) rotate(var(--dr))}}
+.readout{display:flex;gap:16px;align-items:center;font-family:var(--pix);font-size:clamp(.55rem,1vw,.72rem)}
+.mini{appearance:none;background:transparent;color:#fff;border:3px solid #fff;border-radius:8px;padding:9px 12px;font:400 clamp(.55rem,1vw,.72rem)/1.6 var(--pix);cursor:pointer}
+.mini:hover{background:#fff;color:#000}
+
+/* inoculate bar */
+#bar{position:fixed;left:0;right:0;bottom:0;z-index:5}
+.stripes{height:14px;background:repeating-linear-gradient(90deg,var(--red) 0 48px,var(--yellow) 48px 96px,var(--blue) 96px 144px);transition:opacity .3s}
+.inoc{display:block;width:100%;appearance:none;border:0;border-top:6px solid #fff;background:var(--red);color:#fff;font-family:var(--fat);font-size:clamp(1.3rem,3.2vw,2.5rem);letter-spacing:.08em;padding:18px 20px calc(18px + env(safe-area-inset-bottom,0px));text-shadow:4px 4px 0 #000;cursor:pointer;transition:background .15s}
+.inoc:not(:disabled):hover{background:var(--blue)}
+.inoc:not(:disabled):active{transform:translateY(3px)}
+.inoc:not(:disabled) .arr{display:inline-block;animation:nudge .8s ease-in-out infinite}
+@keyframes nudge{50%{transform:translateX(10px)}}
+.inoc:disabled{background:#161616;color:#777;border-top-color:#444;cursor:not-allowed;font-size:clamp(.8rem,1.9vw,1.4rem)}
+#bar:has(.inoc:disabled) .stripes{opacity:.3}
+
+/* loading */
+#load{background:#000;align-items:center;justify-content:center;overflow:hidden}
+#heat{position:absolute;left:0;top:0;display:block;image-rendering:crisp-edges;image-rendering:pixelated}
+.lmsg{position:relative;background:#000;border:5px solid #fff;border-radius:20px;box-shadow:10px 10px 0 var(--red);padding:clamp(22px,3.5vw,44px) clamp(26px,5vw,72px);text-align:center;width:min(88vw,620px)}
+#ltxt{font:400 clamp(1.5rem,4.2vw,3.2rem)/1.1 var(--fat);font-style:italic;text-shadow:.05em .05em 0 var(--red),.1em .1em 0 var(--blue)}
+#ltxt.swap{animation:pop2 .45s cubic-bezier(.3,1.5,.5,1)}
+@keyframes pop2{from{transform:scale(.7);opacity:0}}
+.lbar{margin-top:24px;height:24px;border:4px solid #fff;border-radius:12px;overflow:hidden;background:#000}
+.lbar i{display:block;height:100%;width:0;background:repeating-linear-gradient(90deg,var(--red) 0 24px,var(--yellow) 24px 48px,var(--blue) 48px 72px)}
+#load.run .lbar i{animation:fill 4s linear forwards}
+@keyframes fill{to{width:100%}}
+
+/* game */
+#game{flex-direction:column;overflow-y:auto;padding:clamp(16px,2.6vw,34px) clamp(18px,4vw,56px) 48px}
+.gtop{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;width:100%;max-width:1240px;margin:0 auto}
+.round{font:400 clamp(.55rem,1vw,.7rem)/2 var(--pix);color:var(--yellow)}
+.round span{display:block;color:#fff}
+.score{flex:none;background:var(--yellow);color:#000;border:5px solid #fff;border-radius:16px;box-shadow:6px 6px 0 var(--red);padding:8px 18px 10px;text-align:center;transition:background .2s}
+.score small{display:block;font:400 .55rem var(--pix)}
+.score b{display:block;font:400 clamp(2rem,4vw,3.2rem)/1.1 var(--fat)}
+.score.hit{animation:shake .4s;background:var(--red);color:#fff}
+.gwrap{width:100%;max-width:1240px;margin:0 auto;flex:1;display:flex;flex-direction:column;justify-content:center;gap:clamp(18px,3vw,36px);padding-top:clamp(8px,2vw,20px)}
+.gtitle{font-size:clamp(2.2rem,6.4vw,5.4rem)}
+.gtitle.go{animation:cardIn .8s cubic-bezier(.3,1.5,.5,1)}
+.gcols{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:clamp(24px,4vw,64px);align-items:center}
+.gright{display:flex;justify-content:center}
+#gdish{width:min(100%,56vh,500px);height:auto;overflow:visible}
+#gdish.wob{animation:wob .55s 2}
+#clues{list-style:none;margin:0 0 22px;padding:0;display:flex;flex-direction:column;gap:14px}
+.clue{display:grid;grid-template-columns:auto 1fr;background:var(--cream);color:#000;border:4px solid #fff;border-radius:14px;overflow:hidden;box-shadow:6px 6px 0 var(--csh);animation:cardIn .5s backwards cubic-bezier(.3,1.5,.5,1)}
+.clue b{display:grid;place-items:center;min-width:76px;padding:8px;font:400 .58rem/1.9 var(--pix);background:var(--cbg);color:var(--cfg);text-align:center;border-right:4px solid #000}
+.clue span{padding:13px 16px;font:600 clamp(1rem,1.6vw,1.2rem)/1.45 var(--body)}
+.row{display:flex;flex-wrap:wrap;gap:16px;align-items:center}
+#gform{display:flex;gap:14px;margin-top:22px}
+#guess{flex:1;min-width:0;background:#000;color:#fff;border:4px solid #fff;border-radius:14px;padding:13px 16px;font:600 clamp(1.05rem,1.8vw,1.3rem) var(--body)}
+#guess::placeholder{color:#8a8a8a}
+#guess:focus{outline:4px solid var(--yellow);outline-offset:2px}
+#guess.bad{animation:shake .4s;border-color:var(--red)}
+#msg{min-height:2.2em;margin:12px 0 4px;font:400 .62rem/1.9 var(--pix);color:var(--yellow)}
+.btn{appearance:none;border:4px solid #fff;border-radius:14px;background:var(--bg,var(--red));color:var(--fg,#fff);font:400 clamp(.95rem,1.6vw,1.2rem) var(--fat);letter-spacing:.03em;padding:12px 20px;box-shadow:5px 5px 0 var(--sh,var(--yellow));text-shadow:var(--ts,2px 2px 0 #000);cursor:pointer;transition:transform .12s,box-shadow .12s}
+.btn:hover:not(:disabled){transform:translate(-2px,-2px);box-shadow:7px 7px 0 var(--sh,var(--yellow))}
+.btn:active:not(:disabled){transform:translate(4px,4px);box-shadow:1px 1px 0 var(--sh,var(--yellow))}
+.btn:disabled{background:#161616;color:#777;border-color:#444;box-shadow:none;text-shadow:none;cursor:not-allowed}
+.btn.b{--bg:var(--blue);--sh:var(--red)}
+.btn.y{--bg:var(--yellow);--fg:#000;--ts:none;--sh:var(--blue)}
+.btn small{font:400 .6rem var(--pix);margin-left:6px;vertical-align:middle}
+.result{background:var(--cream);color:#000;border:5px solid #fff;border-radius:18px;box-shadow:8px 8px 0 var(--blue);padding:22px 24px;animation:cardIn .6s backwards cubic-bezier(.3,1.5,.5,1)}
+.result h3{font:400 clamp(1.4rem,2.8vw,2.1rem)/1.1 var(--fat);margin:0 0 .25em;color:var(--red)}
+.result .nm{font-family:var(--fat);font-style:italic;font-weight:400;font-size:clamp(1.3rem,2.6vw,1.9rem);line-height:1.15;color:var(--blue)}
+.result p{font:600 clamp(1rem,1.6vw,1.15rem)/1.5 var(--body);margin:12px 0}
+.result .tot{font:400 .62rem/1.8 var(--pix);margin:0 0 18px}
+.conf{position:fixed;top:-20px;width:12px;height:12px;z-index:9;pointer-events:none;border:2px solid #000;animation:fall var(--t) ease-in forwards}
+@keyframes fall{to{transform:translate(var(--x),110vh) rotate(720deg)}}
+
+/* end */
+#end{align-items:flex-start;justify-content:center;overflow-y:auto;padding:clamp(68px,8vh,90px) 18px 48px}
+.endbox{width:min(680px,100%);text-align:center;margin:auto 0}
+.big{font:400 clamp(4rem,12vw,8rem)/1 var(--fat);color:var(--yellow);margin:.25em 0 0;text-shadow:.05em .05em 0 var(--red),.1em .1em 0 var(--blue)}
+.big small{font-size:.4em;color:#fff;text-shadow:none}
+.rate{font:400 clamp(.6rem,1.2vw,.8rem)/2 var(--pix);margin:14px 0 28px}
+#elist{list-style:none;margin:0 0 32px;padding:0;display:flex;flex-direction:column;gap:12px;text-align:left}
+#elist li{display:grid;grid-template-columns:50px 1fr auto;gap:14px;align-items:center;background:var(--cream);color:#000;border:4px solid #fff;border-radius:14px;padding:8px 16px 8px 10px;box-shadow:5px 5px 0 var(--sh)}
+#elist svg{width:50px;height:50px}
+#elist b{font:400 clamp(.95rem,1.6vw,1.15rem) var(--fat);font-style:italic}
+#elist span{font:400 .7rem var(--pix)}
+.endbox .row{justify-content:center}
+
+/* dish size presets */
+.sizes{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:0 0 clamp(24px,3.4vw,38px)}
+.slab{font:400 clamp(.55rem,1vw,.68rem) var(--pix);margin-right:4px}
+.size{appearance:none;display:inline-flex;align-items:baseline;gap:8px;background:#000;color:#fff;border:4px solid #fff;border-radius:12px;padding:9px 14px;box-shadow:4px 4px 0 var(--blue);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .1s,box-shadow .1s,background .15s,color .15s}
+.size b{font:400 clamp(.9rem,1.4vw,1.1rem) var(--fat)}
+.size small{font:400 .62rem var(--pix);color:var(--yellow)}
+.size:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--blue)}
+.size[aria-checked="true"]{background:var(--yellow);color:#000;transform:translate(3px,3px);box-shadow:1px 1px 0 var(--blue)}
+.size[aria-checked="true"] small{color:#000}
+.size:focus-visible{outline:4px dashed #fff;outline-offset:4px}
+.readout{flex-wrap:wrap;justify-content:center}
+.mini:disabled{opacity:.4;cursor:not-allowed}
+.mini:disabled:hover{background:transparent;color:#fff}
+.tcust{display:inline-flex;align-items:center;gap:8px}
+.tcust small{font:400 .62rem var(--pix);color:var(--yellow)}
+#tcin{width:4.4em;background:#000;color:#fff;border:4px solid #fff;border-radius:10px;padding:9px 6px;font:400 .9rem var(--pix);text-align:center}
+#tcin:focus{outline:4px solid var(--yellow);outline-offset:2px}
+
+/* per-pathogen timer */
+.timer{display:flex;align-items:center;justify-content:center;gap:12px}
+.tnum{font:400 clamp(1.1rem,2vw,1.5rem) var(--pix);color:var(--yellow);min-width:2.2ch;text-align:right}
+.tlab{font:400 .6rem var(--pix);color:#fff}
+.tbar{display:flex;gap:4px;padding:5px;background:#000;border:4px solid #fff;border-radius:10px;box-shadow:4px 4px 0 var(--blue)}
+.tbar i{display:block;width:clamp(9px,2.2vw,24px);height:clamp(14px,2vw,20px);border-radius:2px;background:var(--yellow);transition:background .25s}
+.tbar i.off{background:#262626}
+.timer.low .tbar i:not(.off){background:var(--red)}
+.timer.low .tnum{color:var(--red);animation:blink .5s steps(1,end) infinite}
+
+/* easy mode: pick one of four names */
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:22px}
+.choice{appearance:none;min-width:0;text-align:left;background:var(--cream);color:#000;border:4px solid #fff;border-radius:14px;box-shadow:5px 5px 0 var(--csh);padding:14px 16px;font:italic 700 clamp(1rem,1.6vw,1.15rem)/1.3 var(--body);overflow-wrap:anywhere;cursor:pointer;transition:transform .12s,box-shadow .12s}
+.choice:hover:not(:disabled){transform:translate(-2px,-2px);box-shadow:7px 7px 0 var(--csh)}
+.choice:active:not(:disabled){transform:translate(4px,4px);box-shadow:1px 1px 0 var(--csh)}
+.choice:disabled{background:#2a2a2a;color:#777;border-color:#555;box-shadow:none;text-decoration:line-through;cursor:not-allowed}
+.choice:focus-visible{outline:4px dashed #fff;outline-offset:4px}
+.bonus{display:inline-block;margin:0 0 14px;padding:6px 10px;background:var(--yellow);color:#000;border:3px solid #000;border-radius:8px;font:400 .62rem/1.6 var(--pix)}
+
+/* pause */
+#pause{align-items:center;justify-content:center;overflow-y:auto;padding:40px clamp(18px,4vw,56px)}
+.pwrap{width:min(720px,100%);text-align:center}
+.pbtns{display:flex;flex-wrap:wrap;justify-content:center;gap:clamp(16px,2.6vw,28px);margin:0 0 clamp(28px,5vh,44px)}
+.pbig{appearance:none;width:clamp(150px,18vw,190px);display:flex;flex-direction:column;align-items:center;gap:10px;padding:20px 12px 18px;background:#000;color:#fff;border:5px solid #fff;border-radius:18px;box-shadow:7px 7px 0 var(--red);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .12s,box-shadow .12s}
+.pbig:hover{transform:translate(-2px,-2px);box-shadow:9px 9px 0 var(--red)}
+.pbig:active{transform:translate(4px,4px);box-shadow:2px 2px 0 var(--red)}
+.pbig:focus-visible{outline:4px dashed #fff;outline-offset:5px}
+.pbig svg{width:44px;height:44px;display:block}
+.pbig .pq{font:400 2.2rem/44px var(--pix);height:44px}
+.pbig b{font:400 clamp(.95rem,1.5vw,1.15rem) var(--fat)}
+.pbig small{font:400 .6rem var(--pix);color:var(--yellow)}
+.pbig .x{display:none}
+.pbig[aria-pressed="false"]{color:#8a8a8a;border-color:#8a8a8a;box-shadow:7px 7px 0 #333}
+.pbig[aria-pressed="false"] .x{display:inline}
+.pbig[aria-pressed="false"] small{color:#8a8a8a}
+
+/* results: review and best score */
+#elist>li{grid-template-columns:50px minmax(0,1fr) auto}
+.einfo{min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:5px}
+#elist .etags{display:flex;flex-wrap:wrap;gap:6px}
+#elist .tag{font:400 .5rem/1 var(--pix);padding:4px 6px;border-radius:5px;border:2px solid #000}
+#elist .tag.new{background:var(--yellow)}
+#elist .tag.miss{background:var(--red);color:#fff}
+#elist .erev{color:#000;border-color:#000;padding:7px 9px}
+#elist .erev:hover{background:#000;color:#fff}
+#elist .eclues{grid-column:1/-1;border-top:3px dashed #000;padding-top:10px}
+#elist .eclues ol{margin:0 0 8px;padding-left:1.5em}
+#elist .eclues li{display:list-item;background:none;border:0;border-radius:0;box-shadow:none;padding:2px 0;font:600 .95rem/1.45 var(--body)}
+#elist .eclues p{margin:0;font:600 .95rem/1.45 var(--body);color:#444}
+.ebest{font:400 clamp(.6rem,1.1vw,.75rem)/2 var(--pix);margin:-14px 0 24px}
+.ebest b{color:var(--yellow);font-weight:400}
+.newbest{display:inline-block;margin-left:10px;padding:2px 8px;background:var(--yellow);color:#000;border-radius:6px;animation:blink 1s steps(1,end) 4}
+
+/* specimen book */
+#book{flex-direction:column;overflow-y:auto;padding:clamp(68px,9vh,96px) clamp(18px,4vw,56px) 48px}
+.bkwrap{width:100%;max-width:1180px;margin:0 auto}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:0 0 18px}
+.stat{background:#000;border:4px solid #fff;border-radius:14px;box-shadow:5px 5px 0 var(--blue);padding:14px 16px;text-align:center}
+.stat b{display:block;font:400 clamp(1.6rem,3.4vw,2.6rem)/1.1 var(--fat);color:var(--yellow)}
+.stat small{display:block;margin-top:6px;font:400 .58rem/1.6 var(--pix)}
+.acc{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 28px;margin:0 0 18px;background:#000;border:4px solid #fff;border-radius:14px;padding:16px 18px}
+.accrow{display:grid;grid-template-columns:7.5em minmax(0,1fr) auto;gap:10px;align-items:center;font:400 .6rem var(--pix)}
+.accbar{height:16px;border:3px solid #fff;border-radius:6px;background:#1a1a1a;overflow:hidden}
+.accbar i{display:block;height:100%;background:var(--c)}
+.bests{margin:0 0 30px;background:#000;border:4px solid #fff;border-radius:14px;padding:12px 18px;overflow-x:auto}
+.bests table{width:100%;border-collapse:collapse;font:400 .62rem/2.2 var(--pix)}
+.bests th,.bests td{padding:2px 10px;text-align:center;font-weight:400}
+.bests th:first-child,.bests td:first-child{text-align:left}
+.bests td{color:var(--yellow)}
+.bests td:first-child{color:#fff}
+.bkcat{margin:0 0 28px}
+.bkcat h3{display:flex;align-items:baseline;gap:12px;margin:0 0 14px;font:400 clamp(1.2rem,2.2vw,1.6rem) var(--fat)}
+.bkcat h3 small{font:400 .62rem var(--pix);color:var(--yellow)}
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+.slot{appearance:none;display:flex;flex-direction:column;align-items:center;gap:6px;min-height:118px;padding:10px 8px;background:var(--cream);color:#000;border:4px solid #fff;border-radius:12px;box-shadow:4px 4px 0 var(--sh);text-align:center;font:italic 700 .88rem/1.25 var(--body);overflow-wrap:anywhere;cursor:pointer}
+.slot svg{width:46px;height:46px;flex:none}
+.slot .sf{font:600 .8rem/1.35 var(--body);font-style:normal;color:#444}
+.slot.locked{background:#111;color:#666;border-color:#444;box-shadow:none;cursor:default;font:400 .55rem/1.6 var(--pix);justify-content:center}
+.slot.locked .lk{font:400 1.6rem var(--pix);color:#444}
+.slot:focus-visible{outline:4px dashed #fff;outline-offset:3px}
+
+/* hud: help and sound buttons */
+.hud{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:8;display:flex;gap:8px;transition:opacity .4s,visibility .4s}
+.hud.off{opacity:0;visibility:hidden;pointer-events:none}
+.hb{appearance:none;width:42px;height:42px;padding:0;display:grid;place-items:center;background:#000;color:#fff;border:3px solid #fff;border-radius:10px;box-shadow:3px 3px 0 var(--red);font:400 1rem/1 var(--pix);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .1s,box-shadow .1s}
+.hb:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--red)}
+.hb:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--red)}
+.hb:focus-visible{outline:3px dashed #fff;outline-offset:4px}
+.hb svg{width:22px;height:22px;display:block}
+.hb .x{display:none}
+.hb[aria-pressed="false"]{color:#8a8a8a;border-color:#8a8a8a;box-shadow:3px 3px 0 #333}
+.hb[aria-pressed="false"] .x{display:inline}
+.blink{animation:blink 1s steps(1,end) infinite}
+
+/* how to play */
+#help{flex-direction:column;overflow-y:auto;padding:clamp(68px,9vh,96px) clamp(18px,4vw,56px) 48px}
+.hwrap{width:100%;max-width:1180px;margin:auto}
+.htitle{font-family:var(--fat);font-weight:400;font-size:clamp(2rem,4.6vw,3.8rem);line-height:1.05;margin:0 0 .25em;text-align:center;text-shadow:.05em .05em 0 var(--red),.1em .1em 0 var(--blue)}
+.hsub{text-align:center;font:400 clamp(.55rem,1.05vw,.72rem)/2 var(--pix);color:var(--yellow);margin:0 auto clamp(32px,5vh,50px);max-width:44em}
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(24px,2.6vw,32px)}
+.step{position:relative;display:flex;flex-direction:column;gap:10px;background:var(--cream);color:#000;border:5px solid #fff;border-radius:18px;box-shadow:7px 7px 0 var(--sh);padding:16px 16px 18px}
+#help:not(.off) .step{animation:cardIn .55s backwards cubic-bezier(.3,1.5,.5,1)}
+#help:not(.off) .step:nth-child(2){animation-delay:.1s}#help:not(.off) .step:nth-child(3){animation-delay:.2s}#help:not(.off) .step:nth-child(4){animation-delay:.3s}
+.num{position:absolute;top:-20px;left:-16px;width:46px;height:46px;border-radius:50%;background:var(--sh);color:var(--nf,#fff);border:4px solid #000;display:grid;place-items:center;font:400 1rem var(--pix)}
+.step svg{display:block;width:100%;height:auto;border:4px solid #000;border-radius:10px;background:#000}
+.step h3{margin:4px 0 0;font:400 clamp(1.05rem,1.6vw,1.3rem)/1.1 var(--fat)}
+.step p{margin:0;font:600 clamp(.92rem,1.2vw,1rem)/1.45 var(--body)}
+.board{max-width:640px;margin:clamp(32px,5vh,50px) auto 0;background:#000;border:5px solid #fff;border-radius:18px;box-shadow:8px 8px 0 var(--yellow);padding:20px clamp(16px,3vw,28px) 22px}
+.board h3{margin:0 0 16px;text-align:center;font:400 clamp(.62rem,1.2vw,.82rem)/1.6 var(--pix);color:var(--yellow)}
+.board dl{margin:0;display:grid;gap:12px}
+.board dl div{display:flex;align-items:baseline;gap:10px;font:400 clamp(.55rem,1.1vw,.75rem)/1.7 var(--pix)}
+.board dt{flex:1;display:flex;align-items:baseline;gap:10px;min-width:0}
+.board dt::after{content:'';flex:1;min-width:16px;border-bottom:3px dotted #555}
+.board dd{margin:0;flex:none;color:var(--c,#fff)}
+.hgo{display:flex;justify-content:center;margin-top:clamp(28px,4.5vh,44px)}
+.btn.lg{font-size:clamp(1.2rem,2.2vw,1.6rem);padding:15px 30px}
+
+/* dishes sit at the top of the right-hand column and stay put while the left side scrolls */
+.wrap,.gcols{align-items:start}
+.dishcol,.gright{position:sticky;top:16px;align-self:start}
+@media (orientation:portrait){.gwrap{justify-content:flex-start}}
+
+@media (max-width:880px){.steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:700px){.wrap,.gcols{grid-template-columns:minmax(0,1fr)}.dishcol,.gright{order:-1;position:static}#dish{width:min(78vw,46vh)}#gdish{width:min(56vw,32vh)}}
+@media (max-width:600px){#game{padding-top:68px}.steps,.choices,.stats,.acc{grid-template-columns:minmax(0,1fr)}#elist>li{grid-template-columns:44px minmax(0,1fr) auto}#elist .erev{grid-column:2/-1;justify-self:start}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
+<style>html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}input{-webkit-user-select:text;user-select:text}</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+
+<div class="hud off" id="hud">
+  <button class="hb" id="bHelp" type="button" aria-label="How to play" title="How to play">?</button>
+  <button class="hb" id="bPause" type="button" aria-label="Pause" title="Pause (Esc)" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="5" height="16" fill="currentColor"/><rect x="14" y="4" width="5" height="16" fill="currentColor"/></svg></button>
+  <button class="hb" id="bBook" type="button" aria-label="Specimen book" title="Specimen book" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h6.5A2.5 2.5 0 0 1 12 7.5V20a2 2 0 0 0-2-2H3zM21 5h-6.5A2.5 2.5 0 0 0 12 7.5V20a2 2 0 0 1 2-2h7z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/></svg></button>
+  <button class="hb" id="bMusic" type="button" aria-pressed="true" aria-label="Music"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5.5l11-2.5v12.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/><circle cx="6.5" cy="18" r="3.2" fill="currentColor"/><circle cx="17.5" cy="15.5" r="3.2" fill="currentColor"/><path class="x" d="M3 3l18 18" stroke="#E8222A" stroke-width="3.2" stroke-linecap="round"/></svg></button>
+  <button class="hb" id="bSfx" type="button" aria-pressed="true" aria-label="Sound effects"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h4l5-4.5v15L7 15H3z" fill="currentColor"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.3 5.8a9 9 0 0 1 0 12.4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path class="x" d="M3 3l18 18" stroke="#E8222A" stroke-width="3.2" stroke-linecap="round"/></svg></button>
+</div>
+
+<section id="intro" class="screen" aria-label="Title">
+  <h1 class="title">I am a bacteria</h1>
+  <div class="cta"><span>click to continue</span></div>
+</section>
+
+<section id="help" class="screen off" aria-label="How to play">
+  <div class="hwrap">
+    <h2 class="htitle">How to play</h2>
+    <p class="hsub">Identify every pathogen in your dish. The fewer clues you need, the more points you keep.</p>
+    <ol class="steps">
+      <li class="step" style="--sh:#E8222A"><span class="num">1</span><svg viewBox="0 0 200 110" aria-hidden="true"></svg><h3>Fill the dish</h3><p>Pick a dish size, then tap bacteria, viruses, fungi or parasites to fill it. Each one is a mystery to solve.</p></li>
+      <li class="step" style="--sh:#1B4DFF"><span class="num">2</span><svg viewBox="0 0 200 110" aria-hidden="true"></svg><h3>Inoculate</h3><p>When your dish is ready, hit the Inoculate bar to start testing.</p></li>
+      <li class="step" style="--sh:#FFD400;--nf:#000"><span class="num">3</span><svg viewBox="0 0 200 110" aria-hidden="true"></svg><h3>Read the clues</h3><p>Each pathogen describes itself, from hard clues to easy ones. The first two are free.</p></li>
+      <li class="step" style="--sh:#fff;--nf:#000"><span class="num">4</span><svg viewBox="0 0 200 110" aria-hidden="true"></svg><h3>Name it</h3><p>Type the name, or pick from four in Easy mode, before the timer runs out. Small typos are fine. Answer fast for bonus points.</p></li>
+    </ol>
+    <div class="board">
+      <h3>Scoring for each pathogen</h3>
+      <dl>
+        <div><dt>You start with</dt><dd style="--c:#FFD400">10 PTS</dd></div>
+        <div><dt>Time per pathogen</dt><dd style="--c:#FFD400" id="htime">15 SEC</dd></div>
+        <div><dt>Clues 1 and 2</dt><dd>FREE</dd></div>
+        <div><dt>Each extra clue</dt><dd style="--c:#FF4D55">−1 PT</dd></div>
+        <div><dt>Each wrong guess</dt><dd style="--c:#FF4D55">−1 PT</dd></div>
+        <div><dt>Give up or run out of time</dt><dd>0 PTS</dd></div>
+        <div><dt>Fast correct answer (timed)</dt><dd style="--c:#FFD400">+1 / +2</dd></div>
+      </dl>
+    </div>
+    <div class="hgo"><button class="btn y lg" id="hgo" type="button">Let's go ▶</button></div>
+  </div>
+</section>
+
+<section id="pause" class="screen off" aria-label="Paused">
+  <div class="pwrap">
+    <h2 class="htitle" style="margin-bottom:clamp(28px,5vh,44px)">Paused</h2>
+    <div class="pbtns">
+      <button class="pbig" id="pHelp" type="button"><span class="pq" aria-hidden="true">?</span><b>How to play</b></button>
+      <button class="pbig" id="pMusic" type="button" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5.5l11-2.5v12.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/><circle cx="6.5" cy="18" r="3.2" fill="currentColor"/><circle cx="17.5" cy="15.5" r="3.2" fill="currentColor"/><path class="x" d="M3 3l18 18" stroke="#E8222A" stroke-width="3.2" stroke-linecap="round"/></svg><b>Music</b><small>ON</small></button>
+      <button class="pbig" id="pSfx" type="button" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h4l5-4.5v15L7 15H3z" fill="currentColor"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.3 5.8a9 9 0 0 1 0 12.4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path class="x" d="M3 3l18 18" stroke="#E8222A" stroke-width="3.2" stroke-linecap="round"/></svg><b>Sound effects</b><small>ON</small></button>
+    </div>
+    <button class="btn y lg" id="pResume" type="button">Resume ▶</button>
+  </div>
+</section>
+
+<section id="book" class="screen off" aria-label="Specimen book">
+  <div class="bkwrap">
+    <h2 class="htitle">Specimen book</h2>
+    <p class="hsub" id="bkcount"></p>
+    <div class="stats" id="stats"></div>
+    <div class="acc" id="acc"></div>
+    <div class="bests" id="bests"></div>
+    <div id="bkgrid"></div>
+    <div class="hgo"><button class="btn y lg" id="bkback" type="button">Back ▶</button></div>
+  </div>
+</section>
+
+<section id="build" class="screen off" aria-label="Build your Petri dish">
+  <div class="wrap">
+    <div>
+      <h2 class="q">What’s in the <em>Petri dish?</em></h2>
+      <p class="sub">Pick a dish size, then tap pathogens to fill it. Each one you add is a mystery to solve.</p>
+      <div class="sizes" role="radiogroup" aria-label="Dish size">
+        <span class="slab">DISH SIZE</span>
+        <button class="size" type="button" role="radio" aria-checked="false" data-n="5"><b>Quick</b><small>5</small></button>
+        <button class="size" type="button" role="radio" aria-checked="true" data-n="10"><b>Standard</b><small>10</small></button>
+        <button class="size" type="button" role="radio" aria-checked="false" data-n="20"><b>Marathon</b><small>20</small></button>
+      </div>
+      <div class="sizes" role="radiogroup" aria-label="Timer for each pathogen">
+        <span class="slab">TIMER</span>
+        <button class="size tset" type="button" role="radio" aria-checked="false" data-t="0"><b>Off</b></button>
+        <button class="size tset" type="button" role="radio" aria-checked="false" data-t="10"><b>10</b><small>SEC</small></button>
+        <button class="size tset" type="button" role="radio" aria-checked="false" data-t="12"><b>12</b><small>SEC</small></button>
+        <button class="size tset" type="button" role="radio" aria-checked="true" data-t="15"><b>15</b><small>SEC</small></button>
+        <button class="size tset" type="button" role="radio" aria-checked="false" data-t="custom"><b>Custom</b></button>
+        <span class="tcust" id="tcust" hidden><input id="tcin" type="number" min="5" max="99" step="1" inputmode="numeric" aria-label="Custom seconds per pathogen, 5 to 99"><small>SEC</small></span>
+      </div>
+      <div class="sizes" role="radiogroup" aria-label="Answer mode">
+        <span class="slab">MODE</span>
+        <button class="size mset" type="button" role="radio" aria-checked="false" data-m="easy"><b>Easy</b><small>PICK 1 OF 4</small></button>
+        <button class="size mset" type="button" role="radio" aria-checked="true" data-m="expert"><b>Expert</b><small>TYPE IT</small></button>
+      </div>
+      <div class="grid" id="grid"></div>
+    </div>
+    <div class="dishcol">
+      <svg id="dish" viewBox="0 0 400 400" role="img" aria-label="Petri dish">
+        <defs>
+          <pattern id="ht" width="11" height="11" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><circle cx="5.5" cy="5.5" r="1.7" fill="#F0C65A"/></pattern>
+        </defs>
+        <circle cx="216" cy="216" r="180" fill="#1B4DFF" stroke="#000" stroke-width="6"/>
+        <circle cx="208" cy="208" r="180" fill="#E8222A" stroke="#000" stroke-width="6"/>
+        <circle cx="200" cy="200" r="180" fill="#D6EEFF" stroke="#000" stroke-width="6"/>
+        <circle cx="200" cy="200" r="160" fill="#F2FAFF" stroke="#000" stroke-width="5"/>
+        <circle cx="200" cy="200" r="146" fill="#FFF0C8" stroke="#000" stroke-width="5"/>
+        <circle cx="200" cy="200" r="146" fill="url(#ht)"/>
+        <g id="layer"></g>
+        <path d="M52.8 115A170 170 0 0 1 115 52.8" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round"/>
+        <path d="M156 35.8A170 170 0 0 1 176.3 31.7" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round"/>
+        <g transform="translate(262 366) rotate(-7)"><rect x="-64" y="-17" width="128" height="34" rx="5" fill="#FFD400" stroke="#000" stroke-width="4"/><text y="5" text-anchor="middle" font-family="'Press Start 2P',monospace" font-size="11" fill="#000">SAMPLE 001</text></g>
+      </svg>
+      <div class="readout"><span id="count"></span><button class="mini" id="fill" type="button">Fill randomly</button><button class="mini" id="clear" type="button">Empty dish</button></div>
+    </div>
+  </div>
+  <div id="bar">
+    <div class="stripes"></div>
+    <button class="inoc" id="inoc" type="button" disabled></button>
+  </div>
+</section>
+
+<section id="load" class="screen off" aria-label="Loading">
+  <canvas id="heat"></canvas>
+  <div class="lmsg">
+    <div id="ltxt" aria-live="polite">Inoculating…</div>
+    <div class="lbar"><i></i></div>
+  </div>
+</section>
+
+<section id="game" class="screen off" aria-label="Guess the pathogen">
+  <div class="gtop">
+    <div class="round" id="round"></div>
+    <div class="score" id="score" aria-live="polite"><small>POINTS</small><b id="pts">10</b></div>
+  </div>
+  <div class="gwrap">
+    <h2 class="gtitle" id="gtitle">I am a bacteria</h2>
+    <div class="timer" id="timer" role="timer" aria-label="12 seconds left"><span class="tnum" id="tnum">12</span><div class="tbar" id="tbar" aria-hidden="true"></div><span class="tlab">SEC</span></div>
+    <div class="gcols">
+      <div>
+        <div id="play">
+          <ol id="clues"></ol>
+          <div class="row">
+            <button class="btn b" id="more" type="button"></button>
+            <button class="mini" id="giveup" type="button"></button>
+          </div>
+          <form id="gform" autocomplete="off">
+            <input id="guess" type="text" placeholder="Type your guess" aria-label="Your guess" autocapitalize="off" spellcheck="false">
+            <button class="btn" type="submit">Guess</button>
+          </form>
+          <div class="choices" id="choices" hidden></div>
+          <div id="msg" aria-live="polite"></div>
+        </div>
+        <div id="res" class="result" hidden>
+          <h3 id="rh"></h3>
+          <div class="nm" id="rn"></div>
+          <p id="rf"></p>
+          <div class="bonus" id="rbonus" hidden></div>
+          <div class="tot" id="rt"></div>
+          <button class="btn y" id="next" type="button"></button>
+        </div>
+      </div>
+      <div class="gright">
+        <svg id="gdish" viewBox="0 0 400 400" role="img" aria-label="Mystery sample">
+          <defs><pattern id="ht2" width="11" height="11" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><circle cx="5.5" cy="5.5" r="1.7" fill="#F0C65A"/></pattern></defs>
+          <circle cx="216" cy="216" r="180" fill="#1B4DFF" stroke="#000" stroke-width="6"/>
+          <circle cx="208" cy="208" r="180" fill="#E8222A" stroke="#000" stroke-width="6"/>
+          <circle cx="200" cy="200" r="180" fill="#D6EEFF" stroke="#000" stroke-width="6"/>
+          <circle cx="200" cy="200" r="160" fill="#F2FAFF" stroke="#000" stroke-width="5"/>
+          <circle cx="200" cy="200" r="146" fill="#FFF0C8" stroke="#000" stroke-width="5"/>
+          <circle cx="200" cy="200" r="146" fill="url(#ht2)"/>
+          <g id="glayer"></g>
+          <path d="M52.8 115A170 170 0 0 1 115 52.8" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round"/>
+          <path d="M156 35.8A170 170 0 0 1 176.3 31.7" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round"/>
+          <g transform="translate(262 366) rotate(-7)"><rect x="-64" y="-17" width="128" height="34" rx="5" fill="#FFD400" stroke="#000" stroke-width="4"/><text id="gsample" y="5" text-anchor="middle" font-family="'Press Start 2P',monospace" font-size="11" fill="#000">SAMPLE 001</text></g>
+          <g transform="translate(338 62)"><circle id="gbadgec" r="36" fill="#E8222A" stroke="#000" stroke-width="5"/><text id="gbadget" y="16" text-anchor="middle" font-family="Bungee,Impact,sans-serif" font-size="46" fill="#fff" stroke="#000" stroke-width="2">?</text></g>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="end" class="screen off" aria-label="Results">
+  <div class="endbox">
+    <h2 class="gtitle">Dish tested</h2>
+    <p class="big"><span id="escore">0</span><small> / <span id="emax">0</span></small></p>
+    <p class="rate" id="erate"></p>
+    <p class="ebest" id="ebest"></p>
+    <ul id="elist"></ul>
+    <div class="row">
+      <button class="btn y" id="again" type="button">Test this dish again</button>
+      <button class="btn b" id="newdish" type="button">Build a new dish</button>
+    </div>
+  </div>
+</section>
+
+<script>
+const $=s=>document.querySelector(s),NS='http://www.w3.org/2000/svg',R=146;let MAX=10;
+const still=matchMedia('(prefers-reduced-motion:reduce)').matches;
+const O='stroke="#000" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"';
+
+/* one shape library, reused for cards, dishes and results */
+const SH={
+bacteria:(a,b,c)=>`<g ${O}><path d="M68 50q8-13 14 0t14 0" fill="none" stroke-width="4.5"/><path d="M26 36v-8M42 36v-8M26 64v8M42 64v8" fill="none" stroke-width="4.5"/><rect x="10" y="36" width="60" height="28" rx="14" fill="${a}"/><circle cx="28" cy="50" r="4.5" fill="${b}" stroke-width="3"/><circle cx="43" cy="45" r="3.5" fill="${b}" stroke-width="3"/><circle cx="52" cy="56" r="4" fill="${b}" stroke-width="3"/><ellipse cx="24" cy="42" rx="5" ry="2.5" fill="${c}" stroke="none"/></g>`,
+virus:(a,b,c)=>{let s='';for(let i=0;i<8;i++){const t=i*Math.PI/4,k=Math.cos(t),m=Math.sin(t);s+=`<path d="M${50+k*20} ${50+m*20}L${50+k*34} ${50+m*34}" fill="none"/><circle cx="${50+k*38}" cy="${50+m*38}" r="6" fill="${b}" stroke-width="4"/>`}
+ return `<g ${O}>${s}<circle cx="50" cy="50" r="24" fill="${a}"/><circle cx="41" cy="41" r="6" fill="${c}" stroke="none"/><path d="M45 60q4-6 8 0t8 0" fill="none" stroke="${c}" stroke-width="3.5"/></g>`},
+fungi:(a,b,c)=>`<g ${O}><path d="M37 54Q37 80 29 88H71Q63 80 63 54Z" fill="${c}"/><path d="M10 58Q10 12 50 12T90 58Q50 68 10 58Z" fill="${a}"/><circle cx="33" cy="34" r="7.5" fill="${b}" stroke-width="3.5"/><circle cx="60" cy="28" r="6" fill="${b}" stroke-width="3.5"/><circle cx="73" cy="47" r="5" fill="${b}" stroke-width="3.5"/><circle cx="48" cy="48" r="4.5" fill="${b}" stroke-width="3.5"/></g>`,
+parasite:(a,b)=>{let s='',hx=0,hy=0;for(let i=0;i<9;i++){const t=i/8;hx=13+t*70;hy=52+Math.sin(t*6.28+.6)*20;s+=`<circle cx="${hx}" cy="${hy}" r="${7+t*6}" fill="${i%2?b:a}"/>`}
+ return `<g ${O}>${s}<circle cx="${hx-3}" cy="${hy-3}" r="3.8" fill="#fff" stroke-width="2.5"/><circle cx="${hx+5}" cy="${hy-3}" r="3.8" fill="#fff" stroke-width="2.5"/><circle cx="${hx-2.5}" cy="${hy-3}" r="1.4" fill="#000" stroke="none"/><circle cx="${hx+5.5}" cy="${hy-3}" r="1.4" fill="#000" stroke="none"/></g>`}
+};
+const CAT=[
+{k:'bacteria',name:'Bacteria',title:'I am a bacteria',noun:'bacterium',bg:'#E8222A',sh:'#FFD400',fg:'#fff',ts:'3px 3px 0 #000',lab:['#E8222A','#fff'],card:['#FFF3D1','#FFD400','#fff'],dish:['#E8222A','#FFD400','#fff'],tilt:1},
+{k:'virus',name:'Virus',title:'I am a virus',noun:'virus',bg:'#1B4DFF',sh:'#E8222A',fg:'#fff',ts:'3px 3px 0 #000',lab:['#1B4DFF','#fff'],card:['#FFD400','#E8222A','#fff'],dish:['#1B4DFF','#FFD400','#fff'],tilt:0},
+{k:'fungi',name:'Fungi',title:'I am a fungus',noun:'fungus',bg:'#FFD400',sh:'#1B4DFF',fg:'#000',ts:'none',lab:['#FFD400','#000'],card:['#E8222A','#FFF3D1','#FFF3D1'],dish:['#FFD400','#E8222A','#FFF3D1'],tilt:0},
+{k:'parasite',name:'Parasite',title:'I am a parasite',noun:'parasite',bg:'#FFF3D1',sh:'#E8222A',fg:'#000',ts:'none',lab:['#000','#FFD400'],card:['#1B4DFF','#E8222A'],dish:['#fff','#1B4DFF'],tilt:1}
+];
+
+/* organism library: name, accepted answers, six first-person clues (easy last), fact */
+const DB={
+bacteria:[
+{n:'Escherichia coli',a:['e coli','escherichia coli','ecoli'],c:["I'm a rod-shaped, Gram-negative bacterium.","I can swim using flagella spread all over my surface.","I'm a facultative anaerobe, happy with or without oxygen.","Most of my strains live harmlessly in your large intestine.","I'm the most common cause of urinary tract infections.","Scientists love me. I'm the workhorse of molecular biology labs."],f:"In ideal lab conditions E. coli can divide about every 20 minutes."},
+{n:'Staphylococcus aureus',a:['staph aureus','s aureus','staphylococcus aureus','mrsa'],c:["I'm a Gram-positive coccus.","Under the microscope I cluster together like bunches of grapes.","I'm catalase-positive and coagulase-positive.","About a third of people carry me in their nose without knowing.","I cause boils, impetigo and food poisoning with my heat-stable toxins.","My methicillin-resistant form is a famous hospital superbug."],f:"Its golden colonies gave it the name aureus, Latin for golden."},
+{n:'Mycobacterium tuberculosis',a:['m tuberculosis','tuberculosis','tb','mycobacterium tuberculosis'],c:["I'm a slow grower. I can take weeks to appear on a lab plate.","My waxy, mycolic acid cell wall makes me acid-fast.","I hide inside macrophages and can lie dormant for years.","I travel through the air when someone coughs.","I usually attack the lungs, causing a long cough, sometimes with blood, and night sweats.","Robert Koch discovered me in 1882."],f:"Around a quarter of the world's population is estimated to carry a latent TB infection."},
+{n:'Streptococcus pyogenes',a:['s pyogenes','strep pyogenes','group a strep','streptococcus pyogenes','strep a'],c:["I'm a Gram-positive coccus that grows in chains.","On blood agar I'm beta-haemolytic, clearing the red cells completely.","I belong to Lancefield group A.","I'm the classic cause of a sore 'strep throat'.","I cause scarlet fever, and rheumatic fever can follow me.","In rare cases I'm the 'flesh-eating' bacterium behind necrotising fasciitis."],f:"After decades of use, it is still reliably killed by penicillin."},
+{n:'Vibrio cholerae',a:['v cholerae','vibrio cholerae','cholera'],c:["I'm a Gram-negative rod with a curved, comma shape.","I swim with a single flagellum at one end.","I love salty water and river estuaries.","I spread through water contaminated with faeces.","My toxin makes your gut pour out 'rice-water' diarrhoea.","John Snow traced my 1854 London outbreak to a water pump."],f:"Oral rehydration solution, a simple mix of water, sugar and salts, can treat most cholera patients."},
+{n:'Clostridium botulinum',a:['c botulinum','clostridium botulinum','botulism'],c:["I'm a Gram-positive rod that forms spores.","I'm a strict anaerobe. Oxygen is bad news for me.","My spores survive in soil and can hide in badly canned food.","I make the most potent toxin known to science.","My toxin blocks nerve signals and causes floppy paralysis.","Heavily diluted, my toxin is injected to smooth wrinkles."],f:"Honey isn't given to babies under one because it can carry its spores."},
+{n:'Helicobacter pylori',a:['h pylori','helicobacter pylori','helicobacter'],c:["I'm a Gram-negative, spiral-shaped bacterium.","I live somewhere so acidic most microbes can't survive.","I make urease, turning urea into ammonia to neutralise acid around me.","I burrow into the mucus lining of your stomach.","I'm a major cause of peptic ulcers.","A scientist drank a culture of me to prove I cause gastritis."],f:"Barry Marshall and Robin Warren won the 2005 Nobel Prize for discovering its role in ulcers."},
+{n:'Bacillus anthracis',a:['b anthracis','bacillus anthracis','anthrax'],c:["I'm a large Gram-positive rod.","My chains look like railway boxcars under the microscope.","My spores can survive in soil for decades.","I mostly infect grazing animals like cattle and sheep.","On skin I cause a painless black scab called an eschar.","Louis Pasteur made a vaccine against me in 1881."],f:"Its name comes from the Greek word for coal, after the black skin lesions."},
+{n:'Streptococcus pneumoniae',a:['pneumococcus','s pneumoniae','strep pneumoniae','streptococcus pneumoniae'],c:["I'm a Gram-positive coccus that usually travels in pairs.","On blood agar I'm alpha-haemolytic, turning the agar green around me.","Optochin and bile both kill me, which sets me apart from my cousins.","My thick sugary capsule helps me dodge your immune system.","I'm the most common cause of pneumonia caught outside hospital.","Doctors often just call me the pneumococcus."],f:"Around 100 types of its capsule are known, and vaccines target the most common ones."},
+{n:'Neisseria meningitidis',a:['meningococcus','n meningitidis','neisseria meningitidis'],c:["I'm a Gram-negative coccus that sits in kidney-bean shaped pairs.","I'm oxidase-positive and I ferment both glucose and maltose.","I live harmlessly in the throats of about 1 in 10 people.","I can cause a purple rash that doesn't fade when you press a glass on it.","Teenagers and students are often vaccinated against my groups A, C, W and Y.","I'm called the meningococcus because I cause meningitis."],f:"Meningococcal disease can become life-threatening within hours of the first symptoms."},
+{n:'Salmonella Typhi',a:['salmonella typhi','s typhi','salmonella','typhoid','salmonella enterica typhi'],c:["I'm a Gram-negative rod covered in flagella.","I only infect humans.","I spread through food and water contaminated with faeces.","I can cause rose-coloured spots on the chest and a high fever with a slow pulse.","Some people carry me for years in their gallbladder without being ill.","A cook called Mary Mallon spread me to dozens of people in New York."],f:"Typhoid vaccines come as an injection or as oral capsules."},
+{n:'Clostridium tetani',a:['c tetani','clostridium tetani','tetanus','lockjaw'],c:["I'm a Gram-positive rod with my spore at one end, like a drumstick.","I'm a strict anaerobe that lives in soil and animal guts.","I sneak in through deep, dirty wounds like a puncture from a rusty nail.","My toxin stops your nerves from letting your muscles relax.","I can lock your jaw shut and arch your back in painful spasms.","A booster vaccine, often given with diphtheria, protects you against me."],f:"Its disease is often called lockjaw."},
+{n:'Clostridioides difficile',a:['c diff','c difficile','clostridium difficile','clostridioides difficile','cdiff'],c:["I'm a Gram-positive anaerobe that forms tough spores.","My spores survive alcohol hand gel, so soap and water work better.","My toxins A and B damage the lining of your colon.","I take over when antibiotics wipe out your normal gut bacteria.","I'm a major cause of diarrhoea in hospitals.","I was renamed in 2016, and my name comes from the Latin for 'difficult', because I was hard to grow."],f:"Faecal transplants, which restore healthy gut bacteria, can cure repeated infections."},
+{n:'Pseudomonas aeruginosa',a:['pseudomonas','p aeruginosa','pseudomonas aeruginosa'],c:["I'm a Gram-negative rod that is oxidase-positive.","My cultures smell sweet, a bit like grapes.","I make a blue-green pigment called pyocyanin.","I love water and can live in sinks, hot tubs and contact lens cases.","I'm a serious threat to people with cystic fibrosis or bad burns.","I cause 'hot tub rash' and swimmer's ear."],f:"Its name aeruginosa refers to verdigris, the blue-green rust on copper."},
+{n:'Borrelia burgdorferi',a:['borrelia','borrelia burgdorferi','b burgdorferi','lyme','lyme disease'],c:["I'm a spiral-shaped bacterium called a spirochaete.","Unusually, my chromosome is a straight line, not a circle.","Mice and deer help keep me going in the wild.","Blacklegged (Ixodes) ticks carry me to humans.","I often cause a spreading red rash, sometimes shaped like a bull's-eye.","My disease is named after a town in Connecticut, USA."],f:"Ticks usually need to feed for more than a day to pass it on, so removing them quickly helps."},
+{n:'Yersinia pestis',a:['y pestis','yersinia pestis','plague','black death','bubonic plague'],c:["I'm a Gram-negative rod that stains darker at both ends, like a safety pin.","Wild rodents keep me alive between outbreaks.","Fleas carry me from rats to people.","I cause swollen, painful lymph nodes called buboes.","I'm named after Alexandre Yersin, who found me in Hong Kong in 1894.","In the 1300s I caused the Black Death."],f:"The Black Death killed somewhere between a third and half of Europe's population."},
+{n:'Listeria monocytogenes',a:['listeria','l monocytogenes','listeria monocytogenes'],c:["I'm a Gram-positive rod with a tumbling way of moving.","Inside your cells I ride on comet tails made from the cell's own actin.","Unlike most food bugs, I can keep growing in the fridge.","Soft cheeses, deli meats and smoked fish can carry me.","Pregnant people are told to avoid certain foods because of me.","My name honours Joseph Lister, the father of antiseptic surgery."],f:"Reheating ready-to-eat foods until steaming hot kills it."},
+{n:'Corynebacterium diphtheriae',a:['c diphtheriae','corynebacterium diphtheriae','diphtheria'],c:["I'm a Gram-positive rod that lines up like Chinese letters.","Special stains show dark granules inside me.","My toxin gene came from a virus that infects me.","I form a grey membrane across the back of the throat.","My toxin can damage the heart and nerves.","The 'D' in the DTaP vaccine stands for my disease."],f:"In 1925 sled-dog teams relayed antitoxin to Nome, Alaska, to stop an outbreak."},
+{n:'Bordetella pertussis',a:['b pertussis','bordetella pertussis','pertussis','whooping cough'],c:["I'm a small Gram-negative coccobacillus.","I'm fussy and need special blood-rich media to grow in the lab.","I stick to the hair-like cilia in your airways and stop them working.","My cough can last so long it's called the '100-day cough'.","Babies are most at risk, so pregnant people are offered a vaccine against me.","I cause whooping cough."],f:"The 'whoop' is the sound of a desperate breath in after a long fit of coughing."},
+{n:'Legionella pneumophila',a:['legionella','l pneumophila','legionella pneumophila','legionnaires disease','legionnaires'],c:["I'm a Gram-negative rod that stains so poorly a silver stain is used.","I need iron and cysteine to grow on special charcoal agar.","In nature I live inside amoebae in warm water.","Cooling towers, showers and spas can spray me into the air.","A quick urine test can detect my most common strain.","I was named after a 1976 outbreak at an American Legion convention."],f:"It almost never spreads between people; you catch it by breathing in contaminated water droplets."}
+],
+virus:[
+{n:'Influenza virus',a:['influenza','flu','influenza virus','influenza a','flu virus'],c:["I'm an enveloped RNA virus with a segmented genome.","My surface spikes are haemagglutinin and neuraminidase.","My strains are named after those spikes, like H1N1.","I mutate so often you need a new vaccine most years.","I bring fever, aches and a cough, mostly in winter.","In 1918 I caused a pandemic that killed tens of millions."],f:"Oseltamivir (Tamiflu) works by blocking its neuraminidase."},
+{n:'HIV',a:['hiv','human immunodeficiency virus','hiv 1'],c:["I'm an enveloped RNA virus, a retrovirus.","I use reverse transcriptase to copy my RNA into DNA.","I enter cells that carry the CD4 receptor.","I slowly destroy helper T cells over years.","Without treatment I lead to AIDS.","Antiretroviral therapy can keep me undetectable."],f:"Undetectable means untransmittable: people on effective treatment don't pass it on sexually."},
+{n:'SARS-CoV-2',a:['sars cov 2','sarscov2','covid','covid 19','covid19','coronavirus'],c:["I'm an enveloped, positive-sense RNA virus.","My spike proteins give me a crown-like look.","I get into your cells through the ACE2 receptor.","Losing your sense of taste and smell was one of my signature symptoms.","I was first identified in late 2019.","I caused a pandemic and the first mass-used mRNA vaccines."],f:"The first mRNA vaccine authorised for widespread use, in December 2020, targeted its spike protein."},
+{n:'Measles virus',a:['measles','measles virus'],c:["I'm an enveloped RNA virus in the paramyxovirus family.","I'm one of the most contagious viruses known.","I can linger in the air of a room for up to two hours.","Tiny white Koplik spots inside the cheek give me away early.","My red rash starts on the face and spreads downwards.","The MMR vaccine protects against me."],f:"One case can infect 12 to 18 unvaccinated people."},
+{n:'Rabies virus',a:['rabies','rabies virus','lyssavirus'],c:["I'm an RNA virus shaped like a bullet.","I travel slowly along nerves towards the brain.","I usually get in through an animal bite.","Dogs cause most human cases, but bats carry me too.","I can cause a terrifying fear of water.","Once symptoms start I'm almost always fatal, but vaccination soon after a bite prevents me."],f:"Louis Pasteur first gave a rabies vaccine to a boy, Joseph Meister, in 1885."},
+{n:'Varicella-zoster virus',a:['varicella zoster','varicella zoster virus','vzv','chickenpox','chicken pox','shingles','varicella'],c:["I'm an enveloped DNA virus in the herpes family.","I spread through the air and from fluid in blisters.","My spots come in crops: red bumps, blisters, then crusts.","My first infection gives children an itchy, spotty rash.","After you recover, I hide in your nerve ganglia.","Years later I can wake up again as shingles."],f:"Shingles appears as a band on one side of the body, following the skin area of a single nerve."},
+{n:'Poliovirus',a:['polio','poliovirus','polio virus'],c:["I'm a small RNA virus with no envelope, an enterovirus.","I spread by the faecal-oral route.","Most of my infections cause no symptoms at all.","Rarely, I attack motor neurons in the spinal cord.","I can cause paralysis. Patients once needed iron lungs.","Salk and Sabin made the vaccines that nearly wiped me out."],f:"Two of its three wild types have been eradicated worldwide."},
+{n:'Rotavirus',a:['rotavirus','rota virus'],c:["I'm a virus with a double-stranded RNA genome and no envelope.","I'm tough and survive on surfaces for days.","Young children are my main target.","I cause severe watery diarrhoea and vomiting.","An oral vaccine given as drops to babies protects against me.","My name comes from the Latin rota, wheel, after my shape."],f:"Before vaccines, almost every child had been infected by age five."},
+{n:'Hepatitis B virus',a:['hepatitis b','hep b','hbv','hepatitis b virus'],c:["I'm a small DNA virus, but I copy myself using reverse transcriptase.","My surface antigen, HBsAg, is a classic blood test marker.","I spread through blood, sex and from mother to baby at birth.","Babies infected at birth usually carry me for life.","I attack the liver, causing jaundice and raising the risk of liver cancer.","Newborns are often vaccinated against me on their first day."],f:"Its vaccine was the first vaccine to help prevent a cancer: liver cancer."},
+{n:'Ebola virus',a:['ebola','ebola virus','ebolavirus','zaire ebolavirus'],c:["I'm an RNA virus shaped like a long thread, sometimes curled like a shepherd's crook.","I'm a filovirus, like my cousin Marburg.","Fruit bats are thought to be my natural host.","I spread through contact with the blood or body fluids of a sick person.","I cause a severe fever, sometimes with bleeding.","I'm named after a river in the Democratic Republic of the Congo."],f:"The 2014 to 2016 West Africa outbreak was the largest, with more than 28,000 cases."},
+{n:'Dengue virus',a:['dengue','dengue virus','denv','breakbone fever'],c:["I'm an enveloped RNA virus in the flavivirus family.","I come in four types, and catching a second type can be worse than the first.","Aedes mosquitoes that bite in the daytime carry me.","I'm common in tropical cities, especially during and after the rainy season.","I cause high fever, a rash and pain behind the eyes.","My nickname is 'breakbone fever' because of the joint and muscle pain."],f:"A falling platelet count is one of the warning signs doctors watch for."},
+{n:'Human papillomavirus',a:['hpv','human papillomavirus','papillomavirus','human papilloma virus'],c:["I'm a small DNA virus with no envelope.","There are over 200 types of me.","My E6 and E7 proteins switch off a cell's anti-cancer brakes.","Some of my types cause common warts on hands and feet.","My high-risk types, like 16 and 18, cause most cervical cancers.","Teenagers are offered a vaccine against me to prevent cancer."],f:"Countries with high vaccine coverage have seen large drops in cervical pre-cancers."},
+{n:'Epstein-Barr virus',a:['ebv','epstein barr','epstein barr virus','glandular fever','mono','kissing disease','hhv 4'],c:["I'm an enveloped DNA virus in the herpes family.","I infect B cells by latching onto their CD21 receptor.","I'm linked to some cancers, like Burkitt lymphoma.","Most adults carry me for life without knowing it.","I spread through saliva.","I cause glandular fever, nicknamed the kissing disease."],f:"In 1964 it became the first virus linked to a human cancer."},
+{n:'Herpes simplex virus',a:['hsv','hsv 1','herpes simplex','herpes simplex virus','herpes','cold sore virus'],c:["I'm an enveloped DNA virus with a large genome.","Infected cells can fuse into giant cells with several nuclei.","After the first infection, I hide in nerve ganglia near your face.","Stress, sunlight and fever can wake me up again.","Aciclovir is a common treatment against me.","I cause cold sores on the lips."],f:"About two-thirds of people under 50 worldwide carry type 1, often without any symptoms."},
+{n:'Mumps virus',a:['mumps','mumps virus'],c:["I'm an enveloped RNA virus in the paramyxovirus family.","I spread through saliva and droplets from coughs and sneezes.","After puberty I can inflame the testicles.","Rarely, I cause meningitis or deafness.","I make the salivary glands near the ears swell up.","I'm the second 'M' in the MMR vaccine."],f:"Outbreaks still happen in close communities like universities."},
+{n:'Rubella virus',a:['rubella','rubella virus','german measles'],c:["I'm an enveloped RNA virus in the Matonaviridae family.","I usually cause swollen glands behind the ears.","My rash starts on the face and fades within about three days.","If a pregnant person catches me early on, the baby can be born deaf, blind or with heart defects.","My nickname is German measles.","I'm the 'R' in the MMR vaccine."],f:"The Americas were declared free of rubella in 2015."},
+{n:'Norovirus',a:['norovirus','norwalk virus','norwalk','winter vomiting bug','stomach flu'],c:["I'm a small RNA virus with no envelope.","Just a tiny number of my particles can make you ill.","Alcohol hand gel doesn't work well on me, so wash with soap.","I spread fast on cruise ships, in schools and in hospitals.","I'm named after a town in Ohio where I caused an outbreak in 1968.","I'm the 'winter vomiting bug'."],f:"It's the leading cause of vomiting and diarrhoea outbreaks worldwide."},
+{n:'Zika virus',a:['zika','zika virus','zikv'],c:["I'm an enveloped RNA virus in the flavivirus family.","Aedes mosquitoes carry me, but I can also spread through sex.","Most people I infect get only a mild rash, or nothing at all.","Infection in pregnancy can cause babies to be born with small heads.","I was first found in a monkey in a Ugandan forest in 1947.","I made headlines during a big outbreak in Brazil in 2015 and 2016."],f:"It's named after the Zika forest in Uganda, where it was discovered."},
+{n:'Variola virus',a:['variola','variola virus','smallpox','variola major'],c:["I'm a huge, brick-shaped DNA virus in the poxvirus family.","Unusually for a DNA virus, I copy myself outside the cell's nucleus.","My blisters all appeared at the same stage, unlike chickenpox.","I killed around 300 million people in the 20th century alone.","Edward Jenner used cowpox to protect people against me in 1796.","I'm the only human disease ever eradicated, declared gone in 1980."],f:"The word vaccine comes from vacca, Latin for cow, after Jenner's cowpox."},
+{n:'Rhinovirus',a:['rhinovirus','rhino virus','common cold','cold virus'],c:["I'm a small RNA virus with no envelope, in the picornavirus family.","I grow best at about 33°C, the temperature inside your nose.","There are more than 150 types of me, so there's no vaccine.","I spread through droplets and by touching your nose or eyes.","I give you a runny nose, sneezing and a sore throat.","I'm the most common cause of the common cold."],f:"Rhino comes from the Greek word for nose."}
+],
+fungi:[
+{n:'Candida albicans',a:['candida albicans','c albicans','thrush'],c:["I'm a yeast, but I can also grow long thread-like hyphae.","In serum I form germ tubes, a classic lab test for me.","I live harmlessly in your mouth, gut and on your skin.","Antibiotics and weak immunity give me my chance to overgrow.","I leave creamy white patches you can scrape off the tongue.","My overgrowth is called thrush."],f:"Fluconazole is one of the most common treatments for it."},
+{n:'Penicillium',a:['penicillium','penicillium chrysogenum','penicillium notatum','penicillium rubens'],c:["I'm a mould that grows as blue-green fuzz.","My spores sit in chains on brush-shaped stalks.","You'll find me on old bread and oranges.","Members of my genus give blue cheeses like Roquefort their flavour.","In 1928 I landed on a lab plate and killed the bacteria around me.","Alexander Fleming named an antibiotic after me."],f:"Penicillin was mass-produced in time to treat soldiers in the Second World War."},
+{n:'Aspergillus fumigatus',a:['aspergillus','aspergillus fumigatus','a fumigatus'],c:["I'm a mould whose spores float almost everywhere.","My spore heads look like a watering-can sprinkler.","I thrive in compost heaps and can handle high temperatures.","In people with weak immunity I invade the lungs.","I can form a fungus ball inside old lung cavities.","I cause an allergic lung disease in some people with asthma."],f:"Its name comes from the aspergillum, a sprinkler used for holy water."},
+{n:"Saccharomyces cerevisiae",a:['saccharomyces','saccharomyces cerevisiae','s cerevisiae','yeast','bakers yeast','brewers yeast'],c:["I'm a single-celled fungus that reproduces by budding.","I ferment sugar into alcohol and carbon dioxide.","My gas bubbles make bread dough rise.","Brewers and winemakers rely on me.","Humans have used me for thousands of years, and I was the first eukaryote to have my whole genome sequenced.","Bakers just call me yeast."],f:"Its genome was fully sequenced in 1996."},
+{n:'Trichophyton rubrum',a:['trichophyton','trichophyton rubrum','t rubrum','athletes foot','ringworm','tinea'],c:["I'm a mould that feeds on keratin.","I'm a dermatophyte, so I stick to skin, hair and nails.","I love warm, damp places like sweaty socks.","I can make toenails thick and yellow.","I'm the most common cause of athlete's foot.","One disease I cause is named after a worm, but no worms are involved."],f:"Ringworm's ring is the fungus spreading outward while the centre heals."},
+{n:'Cryptococcus neoformans',a:['cryptococcus','cryptococcus neoformans','c neoformans'],c:["I'm a yeast wrapped in a thick sugary capsule.","India ink makes my capsule show up as a clear halo.","I'm found in soil and pigeon droppings.","You breathe me in, so I start in the lungs.","In people with advanced HIV I travel to the brain.","I cause a deadly fungal meningitis."],f:"Its capsule is its main weapon, helping it dodge the immune system."},
+{n:'Pneumocystis jirovecii',a:['pneumocystis','pneumocystis jirovecii','pneumocystis carinii','pcp','pjp'],c:["I'm a fungus with no ergosterol in my cell membrane, so many antifungals miss me.","I can't be grown in an ordinary lab culture.","Most children have met me by early childhood.","I only cause trouble when immunity is very low.","Co-trimoxazole is used to treat and prevent me.","I'm a classic AIDS-defining pneumonia."],f:"It was once thought to be a protozoan, until its DNA showed it is a fungus."},
+{n:'Claviceps purpurea',a:['claviceps','claviceps purpurea','ergot'],c:["I'm a fungus that infects grasses and cereal crops.","My favourite target is rye.","I replace grains with dark purple-black spurs.","Medicines for migraine and for bleeding after childbirth came from my chemicals.","Bread made from infected grain poisoned whole villages in the Middle Ages.","My poisoning was called St Anthony's fire."],f:"Ergot poisoning causes burning pain and can cut off blood flow to fingers and toes."},
+{n:'Histoplasma capsulatum',a:['histoplasma','histoplasma capsulatum','h capsulatum','histoplasmosis'],c:["I'm dimorphic: a mould in soil and a yeast inside your body.","As a yeast I hide inside your macrophages.","My big spores are covered in knobbly bumps.","I grow in soil rich in bird and bat droppings.","Exploring caves or clearing old chicken coops can expose you to me.","In the US I'm common around the Ohio and Mississippi river valleys."],f:"Despite its name, it has no true capsule. Early scientists were fooled by a halo on stained slides."},
+{n:'Coccidioides immitis',a:['coccidioides','coccidioides immitis','c immitis','valley fever','cocci'],c:["Inside the body I form big spherules packed with spores.","My barrel-shaped spores break off easily into the air.","I live in dry, dusty desert soil in the western USA.","Dust storms and earthquakes can stir me up.","I mainly cause a lung infection with fever and cough.","My disease is called Valley fever, after California's San Joaquin Valley."],f:"Landslide dust after the 1994 Northridge earthquake led to an outbreak of Valley fever."},
+{n:'Blastomyces dermatitidis',a:['blastomyces','blastomyces dermatitidis','b dermatitidis','blastomycosis'],c:["I'm dimorphic: a mould in soil and a yeast in your tissues.","My thick-walled yeast cells bud from one broad base.","I live in damp soil and rotting wood near rivers and lakes.","Dogs often catch me too.","I usually start in the lungs, then can spread to the skin.","My name means 'bud fungus of the skin'."],f:"Its broad-based budding yeast is the classic way to spot it under a microscope."},
+{n:'Candida auris',a:['candida auris','c auris','candidozyma auris'],c:["I'm a yeast that standard lab tests often mistake for other yeasts.","I can survive on hospital surfaces for weeks.","Many of my strains resist fluconazole, and some resist every main antifungal.","I spread between patients in hospitals and care homes.","I was first described in 2009, from a patient's ear.","I'm an emerging superbug yeast named after the Latin for ear."],f:"In 2022 the WHO listed it among the most dangerous fungal pathogens."},
+{n:'Rhizopus',a:['rhizopus','rhizopus arrhizus','rhizopus oryzae','mucormycosis','black fungus','bread mould','bread mold'],c:["I'm a fast-growing mould with wide threads that have almost no cross-walls.","Root-like threads anchor me to my food.","My black spore sacs make old bread look fuzzy and dark.","One of my species ferments soybeans into tempeh.","In people with uncontrolled diabetes, I can invade the sinuses and face.","During COVID-19, India saw a surge in my 'black fungus' infections."],f:"Treatment usually needs amphotericin B plus surgery to remove dead tissue."},
+{n:'Malassezia',a:['malassezia','malassezia furfur','malassezia globosa','pityrosporum'],c:["I'm a yeast that usually needs fat to grow, so labs add oil to my plates.","Under the microscope I can look like spaghetti and meatballs.","I live on almost everyone's oily skin, especially the scalp and face.","I can cause pale or dark patches on the chest and back.","Antifungal shampoos with ketoconazole keep me in check.","I'm linked to dandruff."],f:"It's the most common fungus living on human skin."},
+{n:'Sporothrix schenckii',a:['sporothrix','sporothrix schenckii','s schenckii','sporotrichosis','rose gardeners disease'],c:["I'm a mould at room temperature and a cigar-shaped yeast in the body.","My spores form flower-like clusters at the tips of my threads.","I live on plant matter like moss, hay and rose bushes.","I get in through a small cut or a thorn prick.","Lumps can appear one after another up the arm, along the lymph vessels.","My nickname is rose gardener's disease."],f:"In Brazil a close relative spreads through scratches from infected cats."},
+{n:'Microsporum canis',a:['microsporum','microsporum canis','m canis','cat ringworm'],c:["I'm a dermatophyte mould with large, spindle-shaped spores.","Hairs I infect can glow yellow-green under a UV Wood's lamp.","I feed on the keratin in skin and hair.","Cats and dogs often carry me, sometimes without symptoms.","I cause itchy, scaly ring-shaped patches, often in children.","My name means 'small spore of the dog'."],f:"Despite the name, cats are its most common carriers."},
+{n:'Batrachochytrium dendrobatidis',a:['bd','batrachochytrium','batrachochytrium dendrobatidis','chytrid','chytrid fungus','amphibian chytrid'],c:["I'm a fungus whose spores swim using a tail.","I attack the keratin in my host's skin.","I live in water and spread between ponds and streams.","I stop my hosts taking in water and salts through their skin.","I've driven hundreds of frog and other amphibian species into decline.","I'm the chytrid fungus behind a global frog pandemic."],f:"It's linked to the decline of about 500 amphibian species, including around 90 extinctions."},
+{n:'Ophiocordyceps unilateralis',a:['ophiocordyceps','ophiocordyceps unilateralis','cordyceps','zombie ant fungus'],c:["I'm a fungus that infects insects in tropical forests.","I take over my host's muscles, not just its behaviour.","My victim climbs a plant and clamps its jaws onto a leaf.","A stalk then bursts out of its head to rain my spores down.","Carpenter ants are my favourite hosts.","I'm the zombie-ant fungus that inspired The Last of Us."],f:"The ants clamp on at a height where the temperature and humidity suit the fungus."},
+{n:'Fusarium oxysporum',a:['fusarium','fusarium oxysporum','f oxysporum','panama disease'],c:["My spores are shaped like little canoes.","I live in soil and can survive there for decades.","I block a plant's water pipes, making it wilt.","In people I can infect the cornea, especially in contact lens wearers.","My TR4 strain threatens the world's Cavendish bananas.","I cause Panama disease in bananas."],f:"Panama disease wiped out the Gros Michel banana as a crop in the 1950s, which is why we eat Cavendish."},
+{n:'Talaromyces marneffei',a:['talaromyces','talaromyces marneffei','t marneffei','penicillium marneffei','talaromycosis'],c:["I'm a mould at 25°C and a yeast at body temperature.","As a mould I leak a red pigment into the agar.","My yeast cells split in two instead of budding.","Bamboo rats in Asia carry me.","I mainly infect people with advanced HIV in South and Southeast Asia.","I used to be called Penicillium marneffei."],f:"It's found in north-east India, Thailand, Vietnam and southern China."}
+],
+parasite:[
+{n:'Plasmodium falciparum',a:['plasmodium','plasmodium falciparum','p falciparum','malaria'],c:["I'm a single-celled protozoan.","I first develop quietly in your liver.","Then I invade red blood cells and burst them.","I cause bouts of fever, chills and sweating.","Female Anopheles mosquitoes carry me.","I'm the deadliest cause of malaria."],f:"Artemisinin, from sweet wormwood, earned Tu Youyou a share of the 2015 Nobel Prize."},
+{n:'Giardia',a:['giardia','giardia lamblia','giardia duodenalis','giardia intestinalis'],c:["I'm a protozoan with several flagella.","Under the microscope I look like a face with two eyes.","I grip the lining of your small intestine with a sucking disc.","My cysts survive in cold mountain streams.","I cause greasy, smelly diarrhoea and bloating.","Hikers who drink untreated water often meet me."],f:"As few as ten cysts can start an infection."},
+{n:'Toxoplasma gondii',a:['toxoplasma','toxoplasma gondii','t gondii','toxo'],c:["I'm a single-celled protozoan.","Many people carry me with no symptoms at all.","You can pick me up from undercooked meat.","I can harm an unborn baby.","Infected rodents may lose their fear of cats.","Cats are my main host, so pregnant people avoid litter trays."],f:"Only inside cats, pet or wild, can it reproduce sexually."},
+{n:'Taenia solium',a:['taenia','taenia solium','t solium','pork tapeworm','tapeworm'],c:["I'm a flatworm, a cestode.","My body is a long chain of segments.","My head has suckers and a crown of hooks.","I can grow several metres long in your gut.","You get me from undercooked pork.","My eggs can form cysts in the brain."],f:"Brain cysts from it are a leading cause of acquired epilepsy worldwide."},
+{n:'Enterobius vermicularis',a:['enterobius','enterobius vermicularis','pinworm','threadworm'],c:["I'm a small white roundworm.","I'm the most common worm infection in children in many countries.","Scratching and unwashed hands spread me through families.","Sticky tape pressed on the skin in the morning catches my eggs.","My females crawl out at night to lay eggs around the bottom.","My main symptom is an itchy bottom at night."],f:"Doctors usually treat the whole household at once."},
+{n:'Ascaris lumbricoides',a:['ascaris','ascaris lumbricoides','a lumbricoides','giant roundworm'],c:["I'm a roundworm, a nematode.","My eggs come from soil contaminated with faeces.","My larvae travel through the lungs and get coughed up and swallowed.","I'm the largest roundworm that lives in the human gut.","I can grow up to about 35 cm long.","A big tangle of me can block the intestine."],f:"One female can lay around 200,000 eggs a day."},
+{n:'Trypanosoma brucei',a:['trypanosoma brucei','t brucei','sleeping sickness','african sleeping sickness'],c:["I'm a protozoan shaped like a wavy ribbon.","I swim in the blood using a rippling membrane.","I keep changing my surface coat to dodge antibodies.","The tsetse fly carries me in sub-Saharan Africa.","Late on, I invade the brain.","I cause African sleeping sickness."],f:"It can switch between over a thousand different surface coat genes."},
+{n:'Sarcoptes scabiei',a:['sarcoptes','sarcoptes scabiei','scabies','scabies mite','itch mite'],c:["I'm an eight-legged mite.","I'm barely visible to the naked eye.","I burrow into the top layer of skin to lay my eggs.","I like finger webs, wrists and waistbands.","I spread through close skin contact.","I cause scabies, an itch that's worst at night."],f:"Permethrin cream is the usual treatment, and close contacts are treated too."},
+{n:'Entamoeba histolytica',a:['entamoeba','entamoeba histolytica','e histolytica','amoebic dysentery'],c:["I'm an amoeba that moves using pseudopods.","My mature cysts have four nuclei.","I'm sometimes caught with red blood cells inside me.","I cause flask-shaped ulcers in the colon.","I can travel to the liver and form an abscess.","I cause amoebic dysentery, with bloody diarrhoea."],f:"Its name means 'tissue-dissolving', after the damage it does."},
+{n:'Leishmania donovani',a:['leishmania','leishmania donovani','l donovani','kala azar','visceral leishmaniasis'],c:["I have a long flagellum in the sandfly, but hide it once I'm inside you.","Inside your macrophages I'm a tiny oval form called an amastigote.","Sandflies carry me when they bite at night.","I attack the spleen, liver and bone marrow, and can darken the skin.","My oval forms inside your cells are called Leishman-Donovan bodies.","I cause kala-azar, 'black fever', which India has nearly eliminated."],f:"It's named after William Leishman and Charles Donovan, who described it in 1903."},
+{n:'Trypanosoma cruzi',a:['trypanosoma cruzi','t cruzi','chagas','chagas disease'],c:["I'm a flagellated protozoan with a big kinetoplast near my tail end.","In the blood I often curl into a C or U shape.","Kissing bugs carry me, and they poop near the bite.","I can cause swelling around one eye, called Romaña's sign.","Years later I can enlarge the heart, oesophagus and colon.","I cause Chagas disease in Latin America."],f:"Charles Darwin described being bitten by a kissing bug in South America, and some think he caught Chagas disease."},
+{n:'Schistosoma mansoni',a:['schistosoma','schistosoma mansoni','s mansoni','bilharzia','schistosomiasis','blood fluke','snail fever'],c:["I'm a fluke, and my males and females live paired together.","My eggs have a sharp spine on one side.","My larvae develop inside freshwater snails.","My larvae burrow straight through your skin when you swim or wade.","I live in the veins around the gut, and my eggs damage the liver.","I cause bilharzia, also called snail fever."],f:"Theodor Bilharz discovered the first of these blood flukes in Cairo in 1851."},
+{n:'Necator americanus',a:['necator','necator americanus','n americanus','hookworm'],c:["I'm a roundworm with cutting plates in my mouth instead of teeth.","My larvae burrow into bare feet from warm, damp soil.","I travel through the blood to the lungs, then get swallowed.","I latch onto the wall of your small intestine and drink blood.","Heavy infections cause iron-deficiency anaemia.","I'm a hookworm, and my name means 'American killer'."],f:"Wearing shoes is one of the simplest ways to prevent hookworm."},
+{n:'Wuchereria bancrofti',a:['wuchereria','wuchereria bancrofti','w bancrofti','elephantiasis','lymphatic filariasis','filariasis'],c:["I'm a thread-like roundworm, a filarial worm.","My baby worms wear a thin sheath.","My babies mostly swim in your blood at night.","Mosquitoes like Culex carry me.","I block lymph vessels, causing huge swelling of the legs.","I cause elephantiasis."],f:"Blood tests for it are traditionally taken at night, when the larvae are in the blood."},
+{n:'Onchocerca volvulus',a:['onchocerca','onchocerca volvulus','o volvulus','river blindness','onchocerciasis'],c:["I'm a filarial roundworm, and my adults live in knots under your skin.","A bacterium called Wolbachia lives inside me and helps me survive.","Blackflies that breed in fast-flowing rivers carry me.","My larvae wander through the skin, causing intense itching.","When my larvae die in the eye, they can cause blindness.","I cause river blindness."],f:"The discovery of ivermectin, the drug that treats it, earned a share of the 2015 Nobel Prize."},
+{n:'Dracunculus medinensis',a:['dracunculus','dracunculus medinensis','d medinensis','guinea worm'],c:["I'm a roundworm, and my females can grow up to a metre long.","Tiny crustaceans called copepods carry my larvae.","You catch me by drinking unfiltered pond water.","About a year later I break out through a painful blister, usually on the leg.","People wind me out slowly on a stick, a little each day.","I'm the Guinea worm, and I'm close to being eradicated."],f:"Cases fell from about 3.5 million a year in 1986 to just 10 in 2025."},
+{n:'Echinococcus granulosus',a:['echinococcus','echinococcus granulosus','e granulosus','hydatid','hydatid disease','dog tapeworm'],c:["I'm a tiny tapeworm, only a few millimetres long as an adult.","Adults like me live in dogs' intestines.","Sheep and people swallow my eggs from dog faeces.","In people I form slow-growing fluid-filled cysts, often in the liver.","If one of my cysts bursts, it can cause a severe allergic reaction.","I cause hydatid disease."],f:"Its cysts contain 'hydatid sand': thousands of tiny tapeworm heads."},
+{n:'Head louse',a:['head louse','head lice','louse','lice','pediculus','pediculus humanus capitis','pediculus capitis'],c:["I'm a wingless insect with six legs and claws made for gripping hair.","I feed on blood several times a day.","My eggs, called nits, are glued to hairs close to the scalp.","I can't jump or fly. I crawl from head to head.","I'm common in schoolchildren and make the scalp itch.","I'm the head louse."],f:"Careful combing of wet, conditioned hair with a fine-toothed comb can clear them without chemicals."},
+{n:'Cryptosporidium parvum',a:['cryptosporidium','cryptosporidium parvum','c parvum','crypto'],c:["I'm a protozoan that shows up pink on an acid-fast stain.","My tough oocysts can survive the chlorine in swimming pools.","I live just under the surface of your gut cells.","Calves and other farm animals carry me.","I cause watery diarrhoea that can be dangerous for people with weak immunity.","In 1993 I made over 400,000 people ill in Milwaukee through the water supply."],f:"Boiling water, or filters that remove tiny particles, stops it."},
+{n:'Naegleria fowleri',a:['naegleria','naegleria fowleri','n fowleri','brain eating amoeba'],c:["I'm an amoeba that can grow two flagella when I need to swim.","I love warm fresh water, like lakes and hot springs in summer.","I get in when water is forced up your nose.","I travel along the nerve for smell to the brain.","You can't catch me by drinking water.","I'm the so-called 'brain-eating amoeba'."],f:"Infections are extremely rare but almost always fatal. Nose clips in warm fresh water lower the risk."}
+]};
+
+/* ---------- settings, sound and help ---------- */
+const store={get(k,d){try{const v=localStorage.getItem('iaab-'+k);return v===null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('iaab-'+k,JSON.stringify(v))}catch(e){}}};
+let cur='intro';
+function hudSync(){const h=$('#hud'),s=document.getElementById(cur);if(s&&h.parentElement!==s)s.prepend(h);h.classList.toggle('off',cur==='intro'||cur==='pause');
+ const timed=cur==='game'&&!!TSET&&!G.over;
+ $('#bHelp').hidden=cur==='help'||cur==='load'||cur==='book'||busy||timed;
+ $('#bPause').hidden=!timed;
+ $('#bBook').hidden=!(cur==='build'||cur==='end')||busy}
+
+/* chiptune sound, synthesised live with Web Audio: no sound files needed */
+const AU={ctx:null,fx:null,mus:null,noise:null,timer:null,step:0,next:0,musicOn:store.get('music',true),sfxOn:store.get('sfx',true)};
+const MV=.32,N=m=>440*Math.pow(2,(m-69)/12);
+function audioInit(){
+ if(!AU.ctx){const C=window.AudioContext||window.webkitAudioContext;if(!C)return;try{AU.ctx=new C()}catch(e){return}
+  const c=AU.ctx,master=c.createGain(),comp=c.createDynamicsCompressor();master.gain.value=.6;master.connect(comp);comp.connect(c.destination);
+  AU.fx=c.createGain();AU.fx.gain.value=AU.sfxOn?1:0;AU.fx.connect(master);
+  AU.mus=c.createGain();AU.mus.gain.value=AU.musicOn?MV:0;AU.mus.connect(master);
+  const b=c.createBuffer(1,c.sampleRate>>1,c.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;AU.noise=b}
+ if(AU.ctx.state==='suspended')AU.ctx.resume();
+ if(AU.musicOn)musicStart()}
+function tone(m,t,dur,o={}){const c=AU.ctx;if(!c)return;const osc=c.createOscillator(),g=c.createGain(),v=o.vol??.15,a=o.a||.005;
+ osc.type=o.type||'square';osc.frequency.setValueAtTime(N(m),t);if(o.to)osc.frequency.exponentialRampToValueAtTime(N(o.to),t+dur);
+ g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+a);g.gain.setValueAtTime(v,t+Math.max(a,dur*(o.hold||.3)));g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+ osc.connect(g);g.connect(o.bus||AU.fx);osc.start(t);osc.stop(t+dur+.03)}
+function hiss(t,dur,o={}){const c=AU.ctx;if(!c)return;const s=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain(),v=o.vol??.1;
+ s.buffer=AU.noise;f.type='highpass';f.frequency.value=o.f||5000;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+ s.connect(f);f.connect(g);g.connect(o.bus||AU.fx);s.start(t);s.stop(t+dur+.02)}
+const SFX={
+ blip:t=>{tone(84,t,.07,{vol:.1});tone(91,t+.05,.08,{vol:.08})},
+ bacteria:t=>{tone(64,t,.12,{to:76,vol:.14});tone(83,t+.1,.09,{vol:.1})},
+ virus:t=>{[72,79,84,91].forEach((m,i)=>tone(m,t+i*.035,.08,{vol:.14,type:'triangle'}))},
+ fungi:t=>{hiss(t,.12,{vol:.16,f:2500});tone(55,t+.02,.18,{to:67,type:'triangle',vol:.24})},
+ parasite:t=>{[67,64,69,66,71].forEach((m,i)=>tone(m,t+i*.045,.06,{vol:.1}))},
+ full:t=>{tone(40,t,.12,{type:'sawtooth',vol:.12});tone(40,t+.15,.2,{type:'sawtooth',vol:.12})},
+ clear:t=>{tone(79,t,.32,{to:48,vol:.1});hiss(t,.25,{vol:.06,f:1500})},
+ inoc:t=>{tone(43,t,.9,{to:79,vol:.12,hold:.7});for(let i=0;i<14;i++)tone(80+Math.random()*16|0,t+.25+i*.07+Math.random()*.03,.05,{type:'sine',vol:.09})},
+ swap:t=>{tone(76,t,.1,{vol:.09,type:'triangle'});tone(83,t+.09,.18,{vol:.09,type:'triangle'})},
+ sting:t=>{[60,64,67,72].forEach((m,i)=>tone(m,t+i*.06,.12,{vol:.1}))},
+ clue:t=>{tone(88,t,.08,{type:'triangle',vol:.14});tone(95,t+.06,.15,{type:'triangle',vol:.12})},
+ minus:t=>{tone(67,t+.14,.2,{to:55,vol:.1})},
+ wrong:t=>{tone(43,t,.14,{vol:.14});tone(42,t+.16,.28,{vol:.14})},
+ right:t=>{[72,76,79,84].forEach((m,i)=>tone(m,t+i*.07,.1,{vol:.12}));tone(88,t+.3,.4,{vol:.12,hold:.6});tone(76,t+.3,.4,{vol:.08,type:'triangle'})},
+ giveup:t=>{[67,63,60].forEach((m,i)=>tone(m,t+i*.16,.18,{vol:.12,type:'triangle'}));tone(55,t+.5,.45,{to:52,vol:.12,type:'triangle'})},
+ fanfare:t=>{[[60,0],[64,.12],[67,.24],[72,.36],[67,.52],[72,.64]].forEach(([m,d])=>tone(m,t+d,.14,{vol:.11}));tone(76,t+.8,.7,{vol:.12,hold:.7});tone(72,t+.8,.7,{vol:.07,type:'triangle'})},
+ beep:t=>tone(84,t,.12,{vol:.12}),
+ remove:t=>{tone(79,t,.13,{to:64,vol:.12});tone(60,t+.1,.08,{vol:.08,type:'triangle'})},
+ bonus:t=>{[84,88,91,96].forEach((m,i)=>tone(m,t+.5+i*.05,.09,{vol:.09,type:'triangle'}))},
+ newbook:t=>{tone(79,t+.9,.1,{vol:.08,type:'triangle'});tone(86,t+1,.18,{vol:.08,type:'triangle'})},
+ timeup:t=>{for(let i=0;i<3;i++){tone(76,t+i*.2,.1,{vol:.13});tone(72,t+i*.2+.1,.1,{vol:.13})}tone(48,t+.62,.4,{to:40,vol:.13,type:'sawtooth'})}
+};
+function sfx(n){if(AU.ctx&&AU.sfxOn&&SFX[n])SFX[n](AU.ctx.currentTime+.01)}
+function duck(on){AU.ducked=on;if(AU.ctx)AU.mus.gain.setTargetAtTime(AU.musicOn&&!on?MV:0,AU.ctx.currentTime,.12)}
+/* the loading screen's own theme: a pulsing incubator beat, bubbles, and an arpeggio that climbs and turns tense at "Preparing to test" */
+function loadTheme(){if(!AU.ctx||!AU.sfxOn)return;const t0=AU.ctx.currentTime+.05,sp=.115,A=[60,64,67,72],B=[63,67,70,75];
+ for(let i=0;i<18;i++)tone(i%2?43:36,t0+i*.23,.2,{type:'triangle',vol:.22});
+ for(let i=0;i<36;i++){const p2=i>=18,oct=(i%18)>=9?12:0;tone((p2?B:A)[i%4]+oct,t0+i*sp,sp*.8,{vol:p2?.06:.05})}
+ for(let i=0;i<40;i++)tone(78+Math.random()*20|0,t0+Math.random()*4.1,.05,{type:'sine',vol:.05});
+ tone(84,t0+4.14,.18,{vol:.08,type:'triangle'})}
+/* music: an 8-bar loop at 132 bpm with bass, arpeggio, melody and drums */
+const CH=[[36,[60,64,67,72]],[45,[57,60,64,69]],[41,[53,57,60,65]],[43,[55,59,62,67]],[45,[57,60,64,69]],[41,[53,57,60,65]],[36,[60,64,67,72]],[43,[55,59,62,67]]];
+const MEL=[[76,0,79,0,76,74,72,0],[72,0,69,0,72,74,76,0],[77,0,76,74,72,0,69,0],[71,0,74,0,79,0,0,0],[81,0,79,0,76,0,72,0],[77,0,76,0,72,0,69,0],[72,74,76,0,79,0,76,0],[74,0,71,0,67,0,0,0]];
+function musicStep(s,t,sp){const bar=s>>4,i=s&15,[root,ch]=CH[bar],b=AU.mus;
+ if(!(i&1))tone(i%4?root+12:root,t,sp*1.8,{type:'triangle',vol:.24,bus:b});
+ tone(ch[i&3]+12,t,sp*.9,{vol:.03,bus:b});
+ if(!(i&1)){const m=MEL[bar][i>>1];if(m)tone(m,t,sp*1.9,{vol:.06,bus:b,hold:.5})}
+ if(i===0||i===8)tone(52,t,.14,{to:28,type:'sine',vol:.32,bus:b});
+ if(i===4||i===12)hiss(t,.09,{vol:.08,f:1800,bus:b});
+ if(i%4===2)hiss(t,.03,{vol:.035,f:7000,bus:b})}
+/* guessing theme: same soft triangle tones and low register, but major chords (C, F, Dm, G, Am),
+   a bouncy bass, a skipping melody and a light backbeat so it feels cheerful rather than solemn */
+const CALM_CH=[[48,[55,59,60,64]],[41,[53,57,60,64]],[50,[53,57,60,62]],[43,[55,59,62,67]],[48,[55,59,60,64]],[45,[55,57,60,64]],[41,[53,57,60,64]],[43,[55,59,62,64]]];
+const CALM_MEL=[[64,0,67,0,0,69,67,0],[65,0,69,0,0,72,69,0],[65,0,64,0,62,0,65,0],[67,0,0,0,62,0,0,0],[64,0,67,0,0,72,71,0],[69,0,67,0,64,0,67,0],[65,0,69,0,72,0,69,0],[67,0,71,0,67,0,0,0]];
+function calmStep(s,t,sp){const bar=s>>4,i=s&15,[root,ch]=CALM_CH[bar],b=AU.mus,ARP=[0,1,2,3,2,1,2,3];
+ if(i===0||i===8)tone(root,t,sp*5,{type:'triangle',vol:.2,bus:b,hold:.5});
+ if(i===6||i===14)tone(root+7,t,sp*1.6,{type:'triangle',vol:.14,bus:b});
+ if(!(i&1))tone(ch[ARP[i>>1]],t,sp*1.6,{type:'triangle',vol:.03,bus:b});
+ if(i%4===2)tone(ch[3]+12,t,sp*.6,{vol:.012,bus:b});
+ if(!(i&1)){const m=CALM_MEL[bar][i>>1];if(m)tone(m,t,sp*3,{type:'triangle',vol:.055,bus:b,hold:.4})}
+ if(i===0||i===8)tone(50,t,.14,{to:30,type:'sine',vol:.14,bus:b});
+ if(i===4||i===12)hiss(t,.05,{vol:.025,f:3000,bus:b})}
+const TRACKS={main:{bpm:132,fn:musicStep},calm:{bpm:104,fn:calmStep}};
+function sched(){const c=AU.ctx,tr=TRACKS[AU.track||'main'],sp=60/tr.bpm/4;if(AU.next<c.currentTime)AU.next=c.currentTime+.05;while(AU.next<c.currentTime+.2){tr.fn(AU.step,AU.next,sp);AU.next+=sp;AU.step=(AU.step+1)&127}}
+/* swap tracks with a short fade so the change isn't abrupt */
+function setTrack(n){if((AU.track||'main')===n)return;AU.track=n;AU.step=0;if(!AU.ctx)return;const c=AU.ctx,g=AU.mus.gain;
+ g.cancelScheduledValues(c.currentTime);g.setTargetAtTime(0,c.currentTime,.04);if(AU.musicOn&&!AU.ducked)g.setTargetAtTime(MV,c.currentTime+.3,.15);AU.next=c.currentTime+.3}
+function musicStart(){if(!AU.ctx||AU.timer)return;AU.next=AU.ctx.currentTime+.08;AU.timer=setInterval(sched,30)}
+function musicStop(){clearInterval(AU.timer);AU.timer=null}
+function setMusic(on){AU.musicOn=on;store.set('music',on);const b=$('#bMusic');b.setAttribute('aria-pressed',String(on));b.title=on?'Music on':'Music off';
+ const pm=$('#pMusic');pm.setAttribute('aria-pressed',String(on));pm.querySelector('small').textContent=on?'ON':'OFF';
+ if(AU.ctx){AU.mus.gain.setTargetAtTime(on&&!AU.ducked?MV:0,AU.ctx.currentTime,.05);on?musicStart():musicStop()}}
+function setSfx(on){AU.sfxOn=on;store.set('sfx',on);const b=$('#bSfx');b.setAttribute('aria-pressed',String(on));b.title=on?'Sound effects on':'Sound effects off';
+ const ps=$('#pSfx');ps.setAttribute('aria-pressed',String(on));ps.querySelector('small').textContent=on?'ON':'OFF';if(AU.ctx)AU.fx.gain.value=on?1:0}
+setMusic(AU.musicOn);setSfx(AU.sfxOn);
+$('#bMusic').onclick=()=>{audioInit();setMusic(!AU.musicOn)};
+$('#bSfx').onclick=()=>{audioInit();setSfx(!AU.sfxOn);sfx('blip')};
+['pointerdown','touchend','click','keydown'].forEach(ev=>addEventListener(ev,audioInit,{passive:true}));
+document.addEventListener('visibilitychange',()=>{if(AU.ctx)document.hidden?AU.ctx.suspend():AU.ctx.resume()});
+
+/* how to play */
+let helpFrom='build';
+function openHelp(from){helpFrom=from;if(from==='game')tPause();$('#htime').textContent=TSET?TSET+' SEC':'OFF';$('#hgo').textContent=store.get('seenHelp',false)?'Got it ▶':"Let's go ▶";scr('help');$('#help').scrollTop=0}
+$('#hgo').onclick=()=>{store.set('seenHelp',true);sfx('blip');scr(helpFrom);if(helpFrom==='build')$('#build').classList.add('in');if(helpFrom==='game')tResume()};
+$('#bHelp').onclick=()=>{if(cur==='load'||cur==='help'||busy)return;sfx('blip');openHelp(cur)};
+const at=(k,x,y,s,r=0)=>`<g transform="translate(${x} ${y}) rotate(${r}) scale(${s}) translate(-50 -50)">${SH[k](...CAT.find(c=>c.k===k).dish)}</g>`;
+const STARS='<g fill="#fff">'+[[12,14],[40,8],[66,22],[150,10],[178,26],[190,8],[24,40],[170,44]].map(([x,y],i)=>`<circle cx="${x}" cy="${y}" r="${i%3?1:1.5}"/>`).join('')+'</g>';
+const PTR='<path d="M0 0v24l6-5 4.5 9 4-2-4.5-8.5H18z" fill="#fff" stroke="#000" stroke-width="2" stroke-linejoin="round"/>';
+const PIX="font-family=\"'Press Start 2P',monospace\"";
+const crow=(y,l1,l2,col,dim)=>`<g${dim?' opacity=".42"':''}><rect x="10" y="${y}" width="180" height="27" rx="6" fill="#FFF3D1" stroke="#fff" stroke-width="2"/><path d="M16 ${y}h40v27H16a6 6 0 0 1-6-6V${y+6}a6 6 0 0 1 6-6z" fill="${col}"/><path d="M56 ${y}v27" stroke="#000" stroke-width="2"/><text x="33" y="${y+11}" text-anchor="middle" ${PIX} font-size="6" fill="#fff">${l1}</text><text x="33" y="${y+21}" text-anchor="middle" ${PIX} font-size="6" fill="#fff">${l2}</text><rect x="64" y="${y+7}" width="${104+(y%3)*6}" height="4" rx="2" fill="#7a6f5c"/><rect x="64" y="${y+16}" width="${66+(y%5)*8}" height="4" rx="2" fill="#7a6f5c"/></g>`;
+const ILL=[
+ `${STARS}<circle cx="105" cy="59" r="44" fill="#1B4DFF" stroke="#000" stroke-width="3"/><circle cx="102.5" cy="56.5" r="44" fill="#E8222A" stroke="#000" stroke-width="3"/><circle cx="100" cy="54" r="44" fill="#D6EEFF" stroke="#000" stroke-width="3"/><circle cx="100" cy="54" r="35" fill="#FFF0C8" stroke="#000" stroke-width="3"/>${at('parasite',86,40,.24)}${at('virus',115,41,.26)}${at('bacteria',87,68,.26,-20)}${at('fungi',115,69,.25)}<g transform="translate(152 70)">${PTR}</g>`,
+ `${STARS}<g>${[0,1,2,3,4,5,6,7,8].map(i=>`<rect x="${i*24}" y="54" width="24" height="7" fill="${['#E8222A','#FFD400','#1B4DFF'][i%3]}"/>`).join('')}</g><rect x="0" y="61" width="200" height="49" fill="#E8222A"/><rect x="0" y="61" width="200" height="4" fill="#fff"/><text x="88" y="97" text-anchor="middle" font-family="Bungee,Impact,sans-serif" font-size="19" fill="#000">INOCULATE ▶</text><text x="86" y="95" text-anchor="middle" font-family="Bungee,Impact,sans-serif" font-size="19" fill="#fff">INOCULATE ▶</text><g transform="translate(168 80)">${PTR}</g>`,
+ crow(8,'CLUE 1','FREE','#E8222A')+crow(41,'CLUE 2','FREE','#E8222A')+crow(74,'CLUE 3','-1 PT','#1B4DFF',true),
+ `${STARS}<rect x="10" y="34" width="132" height="38" rx="7" fill="#000" stroke="#fff" stroke-width="3"/><text x="22" y="59" font-family="'Trebuchet MS',Verdana,sans-serif" font-weight="700" font-size="17" fill="#fff">E. coli</text><rect class="blink" x="83" y="42" width="3" height="22" fill="#FFD400"/><circle cx="170" cy="53" r="20" fill="#1B4DFF" stroke="#000" stroke-width="3"/><path d="M160 53l7 7 13-14" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><text x="100" y="97" text-anchor="middle" ${PIX} font-size="8" fill="#FFD400">+8 POINTS</text>`
+];
+document.querySelectorAll('.step svg').forEach((s,i)=>s.innerHTML=ILL[i]);
+
+/* builder cards */
+const grid=$('#grid'),counts={};
+CAT.forEach(c=>{counts[c.k]=0;const b=document.createElement('button');b.type='button';b.className='card';b.setAttribute('aria-label','Add '+c.name.toLowerCase()+' to the dish');
+ b.style.cssText=`--bg:${c.bg};--sh:${c.sh};--fg:${c.fg};--ts:${c.ts}`;
+ b.innerHTML=`<span class="n" id="n-${c.k}">0</span><svg viewBox="0 0 100 100" aria-hidden="true">${SH[c.k](...c.card)}</svg><span>${c.name}</span>`;
+ b.onclick=()=>pick(c);
+ const w=document.createElement('div'),m=document.createElement('button');w.className='cwrap';
+ m.type='button';m.className='minus';m.id='m-'+c.k;m.textContent='−';m.setAttribute('aria-label','Remove one '+c.noun+' from the dish');m.onclick=()=>unpick(c);
+ w.append(b,m);grid.appendChild(w)});
+
+/* screens */
+function scr(id){cur=id;document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('off',s.id!==id));hudSync();
+ if(id==='game')setTrack('calm');else if(id!=='help'&&id!=='load'&&id!=='pause')setTrack('main')}
+function replay(el,cls){el.classList.remove(cls);void el.getBoundingClientRect();el.classList.add(cls)}
+const rnd=n=>(Math.random()*n-n/2).toFixed(1);
+const bob=()=>`--dx:${rnd(8)}px;--dy:${rnd(8)}px;--dr:${rnd(14)}deg;--dur:${(2.2+Math.random()*2).toFixed(1)}s;--dl:-${(Math.random()*3).toFixed(1)}s`;
+
+/* dish */
+const dish=$('#dish'),layer=$('#layer'),items=[];let mains=0,busy=false;
+function place(sc,near){const rad=30*sc;let best=null,bd=-1e9;
+ for(let i=0;i<50;i++){let x,y;
+  if(near){const a=Math.random()*6.283,d=near.rad+rad+4+Math.random()*10;x=near.x+Math.cos(a)*d;y=near.y+Math.sin(a)*d}
+  else{const a=Math.random()*6.283,r=Math.sqrt(Math.random())*(R-rad-8);x=200+Math.cos(a)*r;y=200+Math.sin(a)*r}
+  if(Math.hypot(x-200,y-200)>R-rad-4)continue;
+  let d=1e9;for(const o of items)d=Math.min(d,Math.hypot(o.x-x,o.y-y)-o.rad-rad);
+  if(d>bd){bd=d;best={x,y}}}
+ return best||(near?place(sc):{x:200,y:200})}
+MAX=[5,10,20].includes(store.get('size',10))?store.get('size',10):10;
+const mainScale=()=>MAX<=5?1.1:MAX<=10?.95:.72;
+function add(c,sc=1,near=null,kid=false){const p=place(sc,near),rad=30*sc;items.push({x:p.x,y:p.y,rad,c,kid});
+ const g=document.createElementNS(NS,'g'),rot=c.tilt?Math.random()*360|0:Math.random()*30-15|0;
+ g.setAttribute('transform',`translate(${p.x.toFixed(1)} ${p.y.toFixed(1)}) rotate(${rot}) scale(${(.62*sc).toFixed(2)}) translate(-50 -50)`);
+ g.innerHTML=`<g class="g1"><g class="g2" style="${bob()}">${SH[c.k](...c.dish)}</g></g>`;
+ layer.appendChild(g);items[items.length-1].el=g}
+/* take the most recently added pathogen of this type back out of the dish */
+function unpick(c){if(busy||!counts[c.k])return;let i=items.length-1;while(i>=0&&(items[i].kid||items[i].c!==c))i--;if(i<0)return;
+ const el=items[i].el;items.splice(i,1);el.classList.add('out');setTimeout(()=>el.remove(),still?0:260);counts[c.k]--;mains--;refresh();sfx('remove')}
+const lab=$('#inoc'),cnt=$('#count'),pad2=n=>String(n).padStart(2,'0');
+function refresh(){CAT.forEach(c=>{const n=$('#n-'+c.k);n.textContent=counts[c.k];n.classList.toggle('on',counts[c.k]>0);$('#m-'+c.k).classList.toggle('on',counts[c.k]>0&&!busy)});
+ cnt.textContent='IN DISH '+pad2(mains)+'/'+pad2(MAX);const left=MAX-mains;
+ if(busy){lab.disabled=true;lab.textContent='INCUBATING...'}
+ else if(left<=0){lab.disabled=false;lab.innerHTML='INOCULATE <span class="arr">▶</span>'}
+ else{lab.disabled=true;lab.textContent=mains?`Add ${left} more to fill your dish`:`Add ${MAX} pathogens to fill your dish`}
+ document.querySelectorAll('.size[data-n]').forEach(b=>b.setAttribute('aria-checked',String(+b.dataset.n===MAX)));
+ $('#fill').disabled=busy||left<=0;
+ hudSync()}
+function pick(c){if(busy)return;if(mains>=MAX){replay(dish,'shake');cnt.textContent='DISH IS FULL!';sfx('full');return}
+ add(c,mainScale());counts[c.k]++;mains++;refresh();sfx(c.k)}
+function reset(){layer.innerHTML='';items.length=0;mains=0;busy=false;CAT.forEach(c=>counts[c.k]=0);refresh()}
+/* dish size presets: changing size keeps what fits and redraws it at the new scale */
+function setSize(n){if(busy||n===MAX)return;const keep=items.filter(o=>!o.kid).slice(0,n).map(o=>o.c);MAX=n;store.set('size',n);
+ layer.innerHTML='';items.length=0;mains=0;CAT.forEach(c=>counts[c.k]=0);keep.forEach(c=>{add(c,mainScale());counts[c.k]++;mains++});sfx('blip');refresh()}
+document.querySelectorAll('.size[data-n]').forEach(b=>b.onclick=()=>setSize(+b.dataset.n));
+/* timer setting: off, 10, 12, 15 or a custom 5 to 99 seconds; remembered between visits */
+let tIsCustom=!!store.get('timerIsCustom',false),tCustom=Math.min(99,Math.max(5,Math.round(+store.get('timerCustom',20))||20));
+let TSET=tIsCustom?tCustom:+store.get('timer',15);if(!tIsCustom&&![0,10,12,15].includes(TSET))TSET=15;
+function syncTimerUI(){document.querySelectorAll('.tset').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.t==='custom'?tIsCustom:!tIsCustom&&+b.dataset.t===TSET)));$('#tcust').hidden=!tIsCustom;$('#tcin').value=tCustom}
+document.querySelectorAll('.tset').forEach(b=>b.onclick=()=>{if(b.dataset.t==='custom'){tIsCustom=true;TSET=tCustom}else{tIsCustom=false;TSET=+b.dataset.t;store.set('timer',TSET)}
+ store.set('timerIsCustom',tIsCustom);syncTimerUI();sfx('blip');if(tIsCustom)$('#tcin').focus()});
+function readCustom(){let v=Math.round(+$('#tcin').value);if(!v||v<5)v=5;if(v>99)v=99;tCustom=v;if(tIsCustom)TSET=v;store.set('timerCustom',v)}
+$('#tcin').addEventListener('input',()=>{const v=Math.round(+$('#tcin').value);if(v>=5&&v<=99){tCustom=v;if(tIsCustom)TSET=v;store.set('timerCustom',v)}});
+$('#tcin').addEventListener('change',()=>{readCustom();$('#tcin').value=tCustom});
+syncTimerUI();
+/* answer mode: Easy picks from four names, Expert types the name */
+let MODE=store.get('mode','expert')==='easy'?'easy':'expert';
+function syncModeUI(){document.querySelectorAll('.mset').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.m===MODE)))}
+document.querySelectorAll('.mset').forEach(b=>b.onclick=()=>{MODE=b.dataset.m;store.set('mode',MODE);syncModeUI();sfx('blip')});
+syncModeUI();
+$('#clear').onclick=()=>{if(busy)return;if(mains)sfx('clear');reset()};
+$('#fill').onclick=()=>{if(busy)return;const left=MAX-mains;for(let i=0;i<left;i++)setTimeout(()=>{if(!busy&&mains<MAX)pick(CAT[Math.random()*CAT.length|0])},i*90)};
+lab.onclick=()=>{if(mains<MAX||busy)return;busy=true;refresh();sfx('inoc');
+ const parents=items.filter(o=>!o.kid),ks=mainScale()*.4;
+ G.picks=parents.map(p=>p.c);
+ dish.classList.add('wob');
+ parents.forEach((p,i)=>{for(let j=0;j<3;j++)setTimeout(()=>add(p.c,ks,p,true),400+i*110+j*140)});
+ setTimeout(()=>{dish.classList.remove('wob');toLoad()},900+parents.length*110+500)};
+
+/* loading: even, pixelated red and yellow heat waves drawn on a tiny canvas and scaled up */
+const hc=$('#heat'),hx=hc.getContext('2d');let heatOn=false,heatStep=-1;
+const PX=8,GAP=9,THICK=3,AMP=3,LEN=36;
+function heatSize(){const c=Math.ceil(innerWidth/PX),r=Math.ceil(innerHeight/PX);hc.width=c;hc.height=r;hc.style.width=c*PX+'px';hc.style.height=r*PX+'px';heatStep=-1}
+function heatPixels(step){const w=hc.width,h=hc.height;hx.fillStyle='#000';hx.fillRect(0,0,w,h);
+ for(let i=0;i*GAP<h+GAP;i+=2){const base=i*GAP+3,ys=[];
+  for(let x=0;x<w;x++)ys.push(base+Math.round(AMP*Math.sin(2*Math.PI*(x-step)/LEN)));
+  hx.fillStyle='#E8222A';ys.forEach((y,x)=>hx.fillRect(x,y,1,THICK));
+  hx.fillStyle='#FFD400';ys.forEach((y,x)=>hx.fillRect(x,y+THICK,1,1))}}
+function heatDraw(t){const s=still?0:Math.floor(t/110);if(s!==heatStep){heatStep=s;heatPixels(s)}}
+function heatLoop(t){if(!heatOn)return;heatDraw(t);requestAnimationFrame(heatLoop)}
+function setL(t){const e=$('#ltxt');e.textContent=t;replay(e,'swap')}
+function toLoad(){scr('load');heatSize();replay($('#load'),'run');setL('Inoculating…');duck(true);loadTheme();
+ heatOn=true;if(still)heatDraw(0);else requestAnimationFrame(heatLoop);
+ setTimeout(()=>setL('Preparing to test…'),2070);
+ setTimeout(()=>{heatOn=false;busy=false;refresh();startGame()},4300)}
+
+/* game */
+const G={picks:[],q:[],i:0,total:0,pts:10,rev:2,over:false,log:[]};
+const game=$('#game'),cluesEl=$('#clues'),more=$('#more'),guess=$('#guess'),msg=$('#msg'),scoreEl=$('#score');
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+/* each game: pick organisms not used in this game (and preferably not in recent games), shuffle the play order,
+   and shuffle clues within their tiers so the working facts (1-4) stay first and the giveaways (5-6) stay last */
+function buildQueue(){const used=new Set(),recent=new Set(store.get('recent',[]));
+ const q=G.picks.map(c=>{const pool=DB[c.k].filter(o=>!used.has(o.n)),fresh=pool.filter(o=>!recent.has(o.n)),src=fresh.length?fresh:pool.length?pool:DB[c.k],org=src[Math.random()*src.length|0];used.add(org.n);
+  return{cat:c,org,clues:shuffle(org.c.slice(0,4)).concat(shuffle(org.c.slice(4)))}});
+ store.set('recent',[...used,...store.get('recent',[]).filter(n=>!used.has(n))].slice(0,40));
+ return shuffle(q)}
+function startGame(){G.q=buildQueue();G.i=0;G.total=0;G.log=[];duck(false);scr('game');showOrg()}
+function drawMystery(c){const big=`<g transform="translate(200 200) rotate(${c.tilt?-18:0}) scale(1.75) translate(-50 -50)"><g class="g1"><g class="g2" style="${bob()}">${SH[c.k](...c.dish)}</g></g></g>`;
+ let small='';[[-.6,1],[.55,1],[2.55,1],[3.75,1]].forEach(([a])=>{const x=200+Math.cos(a)*118,y=200+Math.sin(a)*118;small+=`<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${Math.random()*360|0}) scale(.42) translate(-50 -50)"><g class="g1"><g class="g2" style="${bob()}">${SH[c.k](...c.dish)}</g></g></g>`});
+ $('#glayer').innerHTML=small+big}
+function setBadge(t,fill){$('#gbadget').textContent=t;$('#gbadgec').setAttribute('fill',fill)}
+function showPts(hit){$('#pts').textContent=G.pts;if(hit){replay(scoreEl,'hit');setTimeout(()=>scoreEl.classList.remove('hit'),450)}}
+function clueLi(i){const li=document.createElement('li');li.className='clue';li.innerHTML=`<b>CLUE ${i+1}<br>${i<2?'FREE':'−1 PT'}</b><span></span>`;li.lastChild.textContent=G.q[G.i].clues[i];cluesEl.appendChild(li)}
+function moreLabel(){const left=G.q[G.i].org.c.length-G.rev;more.disabled=G.over||left<=0;more.innerHTML=left>0?'Another clue <small>−1 PT</small>':'No clues left'}
+function showOrg(){const {cat,org}=G.q[G.i];G.pts=10;G.rev=2;G.over=false;sfx('sting');
+ game.style.cssText=`--cbg:${cat.lab[0]};--cfg:${cat.lab[1]};--csh:${cat.sh}`;
+ const t=$('#gtitle');t.textContent=cat.title;replay(t,'go');
+ $('#round').innerHTML=`PATHOGEN ${G.i+1} OF ${G.q.length}<span>TOTAL SCORE ${G.total}</span>`;
+ $('#gsample').textContent='SAMPLE '+String(G.i+1).padStart(3,'0');
+ $('#giveup').textContent=`I don't know what ${cat.noun} I am`;
+ cluesEl.innerHTML='';clueLi(0);clueLi(1);moreLabel();showPts();
+ drawMystery(cat);setBadge('?','#E8222A');
+ guess.value='';guess.disabled=false;msg.textContent='';
+ const easy=MODE==='easy',ch=$('#choices');$('#gform').hidden=easy;ch.hidden=!easy;ch.innerHTML='';
+ if(easy){const opts=[org,...DB[cat.k].filter(o=>o!==org).sort(()=>Math.random()-.5).slice(0,3)].sort(()=>Math.random()-.5);
+  opts.forEach(o=>{const b=document.createElement('button');b.type='button';b.className='choice';b.textContent=o.n;b.onclick=()=>choose(o,b);ch.appendChild(b)})}
+ $('#play').hidden=false;$('#res').hidden=true;game.scrollTop=0;tStart();hudSync();
+ if(!easy&&matchMedia('(pointer:fine)').matches)guess.focus({preventScroll:true})}
+/* easy mode answer: a wrong pick costs a point and is crossed out */
+function choose(o,b){if(G.over)return;if(o===G.q[G.i].org)return finish(true);
+ b.disabled=true;G.pts=Math.max(0,G.pts-1);showPts(true);sfx('wrong');msg.textContent='Not quite. −1 point. Pick another name or ask for another clue.'}
+more.onclick=()=>{if(G.over)return;const org=G.q[G.i].org;if(G.rev>=org.c.length)return;
+ clueLi(G.rev);G.rev++;G.pts=Math.max(0,G.pts-1);showPts(true);moreLabel();msg.textContent='';sfx('clue');sfx('minus')};
+
+/* per-pathogen timer (length set on the dish page); pauses while How to play is open or the tab is hidden */
+const tbar=$('#tbar'),timerEl=$('#timer');
+function drawTimer(){const s=Math.ceil(G.tLeft/1000),per=G.tTotal/tbar.children.length,lit=Math.ceil(G.tLeft/per-1e-9);$('#tnum').textContent=s;[...tbar.children].forEach((e,i)=>e.classList.toggle('off',i>=lit));
+ timerEl.classList.toggle('low',s<=4&&!G.over);timerEl.setAttribute('aria-label',s+' seconds left');
+ if(s!==G.tSec){if(G.tRun&&s>0&&s<=3)sfx('beep');G.tSec=s}}
+function tStart(){clearTimeout(G.tDelay);G.tRun=false;timerEl.hidden=!TSET;if(!TSET){G.tLeft=0;return}
+ G.tTotal=TSET*1000;G.tLeft=G.tTotal;G.tSec=TSET;const nb=Math.min(TSET,15);
+ if(tbar.children.length!==nb){tbar.innerHTML='';for(let i=0;i<nb;i++)tbar.appendChild(document.createElement('i'))}
+ drawTimer();G.tDelay=setTimeout(tResume,700)}
+function tPause(){clearTimeout(G.tDelay);G.tRun=false}
+function tResume(){if(TSET&&!G.over&&G.tLeft>0&&cur==='game'){G.tRun=true;G.tLast=performance.now()}}
+function timeUp(){if(G.over)return;G.pts=0;showPts(true);sfx('timeup');finish(false,'time')}
+setInterval(()=>{if(!G.tRun)return;const n=performance.now();G.tLeft-=n-G.tLast;G.tLast=n;if(G.tLeft<=0){G.tLeft=0;G.tRun=false;drawTimer();timeUp()}else drawTimer()},100);
+document.addEventListener('visibilitychange',()=>{if(document.hidden){if(G.tRun){tPause();G.hid=true}}else if(G.hid){G.hid=false;tResume()}});
+
+const norm=s=>s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]/g,'');
+function lev(a,b){const m=a.length,n=b.length;let p=Array.from({length:n+1},(_,j)=>j);
+ for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c}return p[n]}
+function isMatch(g,org){const x=norm(g);if(x.length<2)return false;
+ return [org.n,...org.a].some(t=>{const y=norm(t),tol=y.length<=4?0:y.length<=9?1:2;return lev(x,y)<=tol})}
+$('#gform').onsubmit=e=>{e.preventDefault();if(G.over)return;const v=guess.value.trim();if(!v)return;
+ if(isMatch(v,G.q[G.i].org))return finish(true);
+ G.pts=Math.max(0,G.pts-1);showPts(true);replay(guess,'bad');sfx('wrong');
+ msg.textContent=`Not quite. −1 point. Try again or ask for another clue.`;guess.select()};
+$('#giveup').onclick=()=>{if(!G.over){G.pts=0;showPts(true);sfx('giveup');finish(false)}};
+function finish(win,why){tPause();const {cat,org}=G.q[G.i];G.over=true;timerEl.classList.remove('low');
+ /* speed bonus in timed rounds: +2 if answered in the first 40% of the time, +1 within 70% */
+ let bonus=0;if(win&&TSET&&G.tTotal){const used=(G.tTotal-G.tLeft)/G.tTotal;bonus=used<=.4?2:used<=.7?1:0}
+ G.pts+=bonus;showPts();G.total+=G.pts;const rec={cat,org,pts:G.pts,win,isNew:false};G.log.push(rec);
+ /* lifetime stats and the specimen book, kept in this browser */
+ const st=store.get('stats',{games:0,seen:{},right:{}});st.seen=st.seen||{};st.right=st.right||{};st.seen[cat.k]=(st.seen[cat.k]||0)+1;if(win)st.right[cat.k]=(st.right[cat.k]||0)+1;store.set('stats',st);
+ if(win){const bk=store.get('book',[]);if(!bk.includes(org.n)){bk.push(org.n);store.set('book',bk);rec.isNew=true}}
+ guess.disabled=true;moreLabel();$('#play').hidden=true;$('#res').hidden=false;hudSync();
+ $('#rh').textContent=win?'Correct! I am…':why==='time'?"Time's up! I was…":'I was…';$('#rn').textContent=org.n;$('#rf').textContent=org.f;
+ $('#rbonus').hidden=!bonus;$('#rbonus').textContent='SPEED BONUS +'+bonus;
+ $('#rt').textContent=`+${G.pts} POINT${G.pts===1?'':'S'}   TOTAL ${G.total}`+(rec.isNew?'   NEW SPECIMEN!':'');
+ if(bonus)sfx('bonus');if(rec.isNew)sfx('newbook');
+ $('#round').innerHTML=`PATHOGEN ${G.i+1} OF ${G.q.length}<span>TOTAL SCORE ${G.total}</span>`;
+ $('#next').textContent=G.i+1<G.q.length?'Next pathogen ▶':'See my results ▶';
+ setBadge(win?'✓':'!',win?'#1B4DFF':'#E8222A');replay($('#gdish'),'wob');if(win){confetti();sfx('right')}
+ $('#next').focus({preventScroll:true})}
+$('#next').onclick=()=>{G.i++;G.i<G.q.length?showOrg():showEnd()};
+function confetti(){if(still)return;const cols=['#E8222A','#1B4DFF','#FFD400','#fff'];
+ for(let i=0;i<44;i++){const d=document.createElement('div');d.className='conf';d.style.cssText=`left:${Math.random()*100}vw;background:${cols[i%4]};--x:${rnd(240)}px;--t:${(1.6+Math.random()*1.4).toFixed(2)}s;border-radius:${i%3?0:50}%`;document.body.appendChild(d);setTimeout(()=>d.remove(),3200)}}
+
+/* results */
+const SIZE_NAME={5:'Quick',10:'Standard',20:'Marathon'};
+const icon=c=>SH[c.k](...c.card.map((x,i)=>i===0&&c.k==='bacteria'?'#E8222A':x));
+function showEnd(){const n=G.q.length,max=n*(10+(TSET?2:0)),pc=G.total/(n*10);
+ $('#escore').textContent=G.total;$('#emax').textContent=max;
+ $('#erate').textContent=pc>=.8?'Lab legend. Nothing gets past you.':pc>=.5?'Solid microbiologist. Your cultures are thriving.':'Keep culturing. Every clue makes you sharper.';
+ /* games played and best score for this dish size and mode */
+ const st=store.get('stats',{games:0,seen:{},right:{}});st.games=(st.games||0)+1;store.set('stats',st);
+ const best=store.get('best',{}),key=n+'-'+MODE,prev=best[key]||0,isBest=G.total>prev;if(isBest){best[key]=G.total;store.set('best',best)}
+ const eb=$('#ebest');eb.textContent=`BEST ON ${(SIZE_NAME[n]||n+' PATHOGENS').toUpperCase()}, ${MODE.toUpperCase()}: `;
+ const bb=document.createElement('b');bb.textContent=Math.max(prev,G.total);eb.append(bb);
+ if(isBest&&prev>0){const nb=document.createElement('span');nb.className='newbest';nb.textContent='NEW BEST!';eb.append(nb)}
+ /* every organism from the game, with its points and NEW / MISSED tags (clues stay hidden so they can't be memorised) */
+ const ul=$('#elist');ul.innerHTML='';
+ G.log.forEach(r=>{const li=document.createElement('li');li.style.setProperty('--sh',r.cat.sh);
+  li.innerHTML=`<svg viewBox="0 0 100 100" aria-hidden="true">${icon(r.cat)}</svg><div class="einfo"><b></b><span class="etags">${r.isNew?'<span class="tag new">NEW</span>':''}${r.win?'':'<span class="tag miss">MISSED</span>'}</span></div><span>${r.pts} PTS</span>`;
+  li.querySelector('b').textContent=r.org.n;ul.appendChild(li)});
+ sfx('fanfare');scr('end');$('#end').scrollTop=0}
+$('#again').onclick=()=>startGame();
+$('#newdish').onclick=()=>{sfx('blip');reset();scr('build')};
+
+/* pause (timed rounds): hides the clues, stops the clock, shows only How to play, Music and Sound effects */
+function pauseGame(){if(cur!=='game'||!TSET||G.over)return;tPause();sfx('blip');scr('pause');$('#pResume').focus({preventScroll:true})}
+function resumeGame(){if(cur!=='pause')return;sfx('blip');scr('game');tResume()}
+$('#bPause').onclick=pauseGame;$('#pResume').onclick=resumeGame;
+$('#pHelp').onclick=()=>{sfx('blip');openHelp('pause')};
+$('#pMusic').onclick=()=>{audioInit();setMusic(!AU.musicOn)};
+$('#pSfx').onclick=()=>{audioInit();setSfx(!AU.sfxOn);sfx('blip')};
+addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(cur==='game')pauseGame();else if(cur==='pause')resumeGame()});
+
+/* specimen book: every organism you've identified, plus lifetime stats and best scores */
+let bookFrom='build';
+$('#bBook').onclick=()=>{if(busy)return;bookFrom=cur;renderBook();sfx('blip');scr('book');$('#book').scrollTop=0};
+$('#bkback').onclick=()=>{sfx('blip');scr(bookFrom);if(bookFrom==='build')$('#build').classList.add('in')};
+function renderBook(){const bk=new Set(store.get('book',[])),st=store.get('stats',{games:0,seen:{},right:{}}),best=store.get('best',{});st.seen=st.seen||{};st.right=st.right||{};
+ const all=CAT.reduce((a,c)=>a+DB[c.k].length,0),got=CAT.reduce((a,c)=>a+DB[c.k].filter(o=>bk.has(o.n)).length,0);
+ let seen=0,right=0;CAT.forEach(c=>{seen+=st.seen[c.k]||0;right+=st.right[c.k]||0});
+ $('#bkcount').textContent=`${got} of ${all} pathogens identified. Tap a specimen to read its fact.`;
+ $('#stats').innerHTML=`<div class="stat"><b>${st.games||0}</b><small>GAMES PLAYED</small></div><div class="stat"><b>${got}/${all}</b><small>IDENTIFIED</small></div><div class="stat"><b>${seen?Math.round(100*right/seen):0}%</b><small>ACCURACY</small></div>`;
+ $('#acc').innerHTML=CAT.map(c=>{const s=st.seen[c.k]||0,r=st.right[c.k]||0,p=s?Math.round(100*r/s):0;return `<div class="accrow" style="--c:${c.k==='parasite'?'#fff':c.bg}"><span>${c.name.toUpperCase()}</span><div class="accbar"><i style="width:${p}%"></i></div><span>${r}/${s}</span></div>`}).join('');
+ $('#bests').innerHTML='<table><thead><tr><th>BEST SCORES</th><th>EASY</th><th>EXPERT</th></tr></thead><tbody>'+[5,10,20].map(n=>`<tr><td>${SIZE_NAME[n].toUpperCase()}</td><td>${best[n+'-easy']??'-'}</td><td>${best[n+'-expert']??'-'}</td></tr>`).join('')+'</tbody></table>';
+ const g=$('#bkgrid');g.innerHTML='';
+ CAT.forEach(c=>{const sec=document.createElement('section');sec.className='bkcat';const have=DB[c.k].filter(o=>bk.has(o.n)).length;
+  sec.innerHTML=`<h3>${c.name}<small>${have}/${DB[c.k].length}</small></h3><div class="slots"></div>`;const sl=sec.querySelector('.slots');
+  DB[c.k].forEach(o=>{const b=document.createElement('button');b.type='button';
+   if(bk.has(o.n)){b.className='slot';b.style.setProperty('--sh',c.sh);b.setAttribute('aria-expanded','false');
+    b.innerHTML=`<svg viewBox="0 0 100 100" aria-hidden="true">${icon(c)}</svg><span></span><span class="sf" hidden></span>`;b.children[1].textContent=o.n;b.children[2].textContent=o.f;
+    b.onclick=()=>{const f=b.children[2];f.hidden=!f.hidden;b.setAttribute('aria-expanded',String(!f.hidden));sfx('blip')}}
+   else{b.className='slot locked';b.disabled=true;b.setAttribute('aria-label','Not identified yet');b.innerHTML='<span class="lk" aria-hidden="true">?</span><span>NOT FOUND YET</span>'}
+   sl.appendChild(b)});
+  g.appendChild(sec)})}
+
+/* intro */
+let ready=false;
+setTimeout(()=>{ready=true;$('#intro').classList.add('ready');$('.cta').classList.add('show')},3000);
+function go(){if(!ready)return;ready=false;sfx('blip');if(store.get('seenHelp',false)){scr('build');$('#build').classList.add('in')}else openHelp('build')}
+$('#intro').addEventListener('click',go);
+addEventListener('keydown',e=>{if(ready&&(e.key==='Enter'||e.key===' ')){e.preventDefault();go()}});
+refresh();
+
+/* starfield */
+const cv=$('#stars'),cx=cv.getContext('2d');let W,H,S=[];
+function size(){const d=devicePixelRatio||1;W=cv.width=innerWidth*d;H=cv.height=innerHeight*d;
+ S=Array.from({length:Math.round(innerWidth*innerHeight/8500)},()=>({x:Math.random()*W,y:Math.random()*H,r:(Math.random()*1.1+.5)*d,p:Math.random()*6.28,s:Math.random()*.004+.001}));if(still)draw(0)}
+function draw(t){cx.clearRect(0,0,W,H);cx.fillStyle='#fff';for(const s of S){cx.globalAlpha=.3+.7*(.5+.5*Math.sin(t*s.s+s.p));cx.beginPath();cx.arc(s.x,s.y,s.r,0,6.283);cx.fill()}}
+size();addEventListener('resize',()=>{size();if(heatOn)heatSize()});
+if(!still)requestAnimationFrame(function f(t){draw(t);requestAnimationFrame(f)});
+</script>
+<script>if('serviceWorker' in navigator&&location.protocol!=='file:')addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));</script>
+</body>
+</html>
